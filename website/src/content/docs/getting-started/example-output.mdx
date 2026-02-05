@@ -1,0 +1,263 @@
+---
+title: Example Output
+description: See what Codemetry output looks like in practice
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Table Output
+
+Running `php artisan codemetry:analyze --days=5` produces:
+
+```
++------------+--------+-------+------------+------------------------------------------+
+| Date       | Mood   | Score | Confidence | Top Reasons                              |
++------------+--------+-------+------------+------------------------------------------+
+| 2024-01-15 | good   | 82    | 0.80       | Low churn; stable patterns               |
+| 2024-01-14 | good   | 75    | 0.70       | Minimal follow-up fixes                  |
+| 2024-01-13 | medium | 58    | 0.75       | Elevated scatter; fix density p85        |
+| 2024-01-12 | bad    | 38    | 0.80       | High churn p95; 3 reverts; scattered     |
+| 2024-01-11 | medium | 62    | 0.60       | Moderate churn; limited data             |
++------------+--------+-------+------------+------------------------------------------+
+```
+
+## JSON Output
+
+Running `php artisan codemetry:analyze --days=3 --format=json` produces:
+
+```json
+{
+  "schema_version": "1.0",
+  "repo_id": "5d41402abc4b2a76b9719d911017c592",
+  "analyzed_at": "2024-01-15T14:30:00+00:00",
+  "request_summary": {
+    "since": null,
+    "until": null,
+    "days": 3,
+    "author": null,
+    "branch": null,
+    "timezone": null,
+    "baseline_days": 56,
+    "follow_up_horizon_days": 3,
+    "ai_enabled": false,
+    "ai_engine": "openai",
+    "output_format": "json"
+  },
+  "windows": [
+    {
+      "window_label": "2024-01-15",
+      "mood_label": "good",
+      "mood_score": 82,
+      "confidence": 0.8,
+      "reasons": [
+        {
+          "signal_key": "change.churn",
+          "direction": "positive",
+          "magnitude": 8.5,
+          "summary": "Churn well below p25 baseline"
+        },
+        {
+          "signal_key": "followup.fix_density",
+          "direction": "positive",
+          "magnitude": 5.0,
+          "summary": "Low follow-up fix density"
+        }
+      ],
+      "confounders": [],
+      "raw_signals": {
+        "signals": {
+          "change.added": {
+            "key": "change.added",
+            "type": "numeric",
+            "value": 45,
+            "description": "Lines added"
+          },
+          "change.deleted": {
+            "key": "change.deleted",
+            "type": "numeric",
+            "value": 12,
+            "description": "Lines deleted"
+          },
+          "change.churn": {
+            "key": "change.churn",
+            "type": "numeric",
+            "value": 57,
+            "description": "Total lines changed (added + deleted)"
+          },
+          "change.commits_count": {
+            "key": "change.commits_count",
+            "type": "numeric",
+            "value": 4,
+            "description": "Number of commits"
+          },
+          "change.files_touched": {
+            "key": "change.files_touched",
+            "type": "numeric",
+            "value": 6,
+            "description": "Unique files modified"
+          },
+          "change.scatter": {
+            "key": "change.scatter",
+            "type": "numeric",
+            "value": 2,
+            "description": "Unique directories touched"
+          },
+          "msg.fix_keyword_count": {
+            "key": "msg.fix_keyword_count",
+            "type": "numeric",
+            "value": 0,
+            "description": "Commits with fix keywords"
+          },
+          "msg.revert_count": {
+            "key": "msg.revert_count",
+            "type": "numeric",
+            "value": 0,
+            "description": "Revert commits"
+          },
+          "followup.fix_commits": {
+            "key": "followup.fix_commits",
+            "type": "numeric",
+            "value": 0,
+            "description": "Follow-up fix commits in horizon"
+          },
+          "followup.fix_density": {
+            "key": "followup.fix_density",
+            "type": "numeric",
+            "value": 0,
+            "description": "Fix commits per churn unit"
+          }
+        }
+      },
+      "normalized": {
+        "norm.change.churn.z": -1.2,
+        "norm.change.churn.pctl": 15.0,
+        "norm.change.commits_count.z": 0.3,
+        "norm.change.commits_count.pctl": 55.0,
+        "norm.change.scatter.z": -0.5,
+        "norm.change.scatter.pctl": 35.0,
+        "norm.followup.fix_density.z": -0.8,
+        "norm.followup.fix_density.pctl": 22.0
+      }
+    },
+    {
+      "window_label": "2024-01-14",
+      "mood_label": "medium",
+      "mood_score": 58,
+      "confidence": 0.75,
+      "reasons": [
+        {
+          "signal_key": "change.scatter",
+          "direction": "negative",
+          "magnitude": 10.0,
+          "summary": "High file scatter at p90"
+        },
+        {
+          "signal_key": "followup.fix_density",
+          "direction": "negative",
+          "magnitude": 8.0,
+          "summary": "Elevated follow-up fix density"
+        }
+      ],
+      "confounders": [],
+      "raw_signals": { "...": "..." },
+      "normalized": { "...": "..." }
+    },
+    {
+      "window_label": "2024-01-13",
+      "mood_label": "bad",
+      "mood_score": 35,
+      "confidence": 0.8,
+      "reasons": [
+        {
+          "signal_key": "change.churn",
+          "direction": "negative",
+          "magnitude": 20.0,
+          "summary": "Churn at p95+ percentile"
+        },
+        {
+          "signal_key": "followup.fix_density",
+          "direction": "negative",
+          "magnitude": 15.0,
+          "summary": "High follow-up fix density p90+"
+        },
+        {
+          "signal_key": "msg.revert_count",
+          "direction": "negative",
+          "magnitude": 15.0,
+          "summary": "Revert commits detected"
+        }
+      ],
+      "confounders": [
+        "large_refactor_suspected"
+      ],
+      "raw_signals": { "...": "..." },
+      "normalized": { "...": "..." }
+    }
+  ]
+}
+```
+
+## With AI Explanations
+
+When AI is enabled (`--ai=1`), each window includes an `ai_summary`:
+
+```json
+{
+  "window_label": "2024-01-13",
+  "mood_label": "bad",
+  "mood_score": 35,
+  "confidence": 0.8,
+  "ai_summary": {
+    "explanation_bullets": [
+      "This day shows significantly elevated code churn (95th percentile), indicating major changes or refactoring activity.",
+      "The presence of revert commits suggests some changes needed to be rolled back, possibly due to issues discovered post-merge.",
+      "High follow-up fix density indicates that files touched on this day required subsequent patches.",
+      "The 'large_refactor_suspected' confounder suggests this may be intentional restructuring rather than quality issues.",
+      "Consider reviewing the commit history to distinguish planned refactoring from rushed or problematic changes."
+    ],
+    "score_delta": 0,
+    "confidence_delta": 0.0,
+    "label_override": null
+  }
+}
+```
+
+<Aside type="tip">
+  AI summaries help translate raw metrics into actionable insights, especially useful for team discussions or reports.
+</Aside>
+
+## Understanding Confounders
+
+Confounders are context flags that help interpret results:
+
+| Confounder | Meaning |
+|------------|---------|
+| `large_refactor_suspected` | High churn but low follow-up fixes—likely intentional restructuring |
+| `formatting_or_rename_suspected` | High churn with many files but few actual logic changes |
+| `ai_unavailable` | AI was requested but couldn't run (missing API key, network error) |
+| `provider_skipped:*` | A signal provider failed and was skipped |
+
+## Empty Windows
+
+Days with no commits still appear in output:
+
+```json
+{
+  "window_label": "2024-01-14",
+  "mood_label": "good",
+  "mood_score": 70,
+  "confidence": 0.4,
+  "reasons": [],
+  "confounders": [],
+  "raw_signals": {
+    "signals": {
+      "change.commits_count": { "value": 0 }
+    }
+  }
+}
+```
+
+Empty days get:
+- Base score of 70 (neutral)
+- Low confidence (limited data)
+- No reasons (nothing to report)

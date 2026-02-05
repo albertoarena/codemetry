@@ -1,0 +1,174 @@
+---
+title: Keywords Configuration
+description: Customize commit message pattern detection
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Codemetry analyzes commit messages to detect patterns like fixes, reverts, and work-in-progress commits. You can customize these patterns to match your team's conventions.
+
+## Default Patterns
+
+```php
+'keywords' => [
+    'fix_pattern' => '/\b(fix|bug|hotfix|patch|typo|oops)\b/i',
+    'revert_pattern' => '/\b(revert)\b/i',
+    'wip_pattern' => '/\b(wip|tmp|debug|hack)\b/i',
+],
+```
+
+## Pattern Syntax
+
+Patterns use PHP's PCRE regex syntax:
+
+| Element | Meaning |
+|---------|---------|
+| `\b` | Word boundary |
+| `(a|b|c)` | Match any of a, b, or c |
+| `/i` | Case-insensitive matching |
+
+## Fix Pattern
+
+Identifies commits that fix issues. These affect:
+- `msg.fix_keyword_count` signal
+- `msg.fix_ratio` signal
+- Follow-up fix detection
+
+### Default Keywords
+- `fix` — General fixes
+- `bug` — Bug fixes
+- `hotfix` — Urgent fixes
+- `patch` — Patches
+- `typo` — Typo corrections
+- `oops` — Mistake corrections
+
+### Customization Examples
+
+**Add more keywords:**
+```php
+'fix_pattern' => '/\b(fix|bug|hotfix|patch|typo|oops|broken|resolve|repair)\b/i',
+```
+
+**Match Jira-style prefixes:**
+```php
+'fix_pattern' => '/\b(fix|bug|hotfix|patch|typo|oops)\b|^(FIX|BUG)-\d+/i',
+```
+
+**Match Conventional Commits:**
+```php
+'fix_pattern' => '/^fix(\(.+\))?:|^bugfix:|^hotfix:/i',
+```
+
+## Revert Pattern
+
+Identifies commits that undo previous changes. Reverts trigger a significant score penalty (-15 points).
+
+### Default Keywords
+- `revert` — Standard git revert messages
+
+### Customization Examples
+
+**Include rollback terminology:**
+```php
+'revert_pattern' => '/\b(revert|rollback|undo)\b/i',
+```
+
+**Match "Revert:" prefix:**
+```php
+'revert_pattern' => '/^Revert:|\b(revert|rollback)\b/i',
+```
+
+## WIP Pattern
+
+Identifies work-in-progress or temporary commits. High WIP ratios (≥0.3) trigger a score penalty (-8 points).
+
+### Default Keywords
+- `wip` — Work in progress
+- `tmp` — Temporary
+- `debug` — Debug code
+- `hack` — Quick hacks
+
+### Customization Examples
+
+**Include more WIP indicators:**
+```php
+'wip_pattern' => '/\b(wip|tmp|debug|hack|todo|fixme|xxx|temp|draft)\b/i',
+```
+
+**Match [WIP] prefix style:**
+```php
+'wip_pattern' => '/^\[WIP\]|\[DRAFT\]|\b(wip|tmp|debug|hack)\b/i',
+```
+
+## Team Convention Examples
+
+### Conventional Commits
+
+```php
+'keywords' => [
+    'fix_pattern' => '/^fix(\(.+\))?:/i',
+    'revert_pattern' => '/^revert(\(.+\))?:/i',
+    'wip_pattern' => '/^wip(\(.+\))?:|^chore\(wip\):/i',
+],
+```
+
+### Jira Integration
+
+```php
+'keywords' => [
+    'fix_pattern' => '/\b(fix|bug|hotfix)\b|(FIX|BUG|HOTFIX)-\d+/i',
+    'revert_pattern' => '/\b(revert)\b|REVERT-\d+/i',
+    'wip_pattern' => '/\b(wip|tmp)\b|\[WIP\]/i',
+],
+```
+
+### GitHub Issue References
+
+```php
+'keywords' => [
+    'fix_pattern' => '/\b(fix|bug|hotfix|closes|fixes)\b|#\d+/i',
+    'revert_pattern' => '/\b(revert)\b/i',
+    'wip_pattern' => '/\b(wip|tmp|debug|hack)\b/i',
+],
+```
+
+## Testing Your Patterns
+
+Before deploying pattern changes, test them against your recent commits:
+
+```bash
+# List recent commit messages
+git log --oneline -50
+
+# Test pattern matching manually
+php -r "
+\$pattern = '/\b(fix|bug|hotfix)\b/i';
+\$messages = [
+    'Fix login validation',
+    'Add new feature',
+    'bugfix: user registration',
+    'Update README',
+];
+foreach (\$messages as \$msg) {
+    \$match = preg_match(\$pattern, \$msg) ? '✓' : '✗';
+    echo \"\$match \$msg\n\";
+}
+"
+```
+
+<Aside type="caution">
+  Overly broad patterns can misclassify commits. "fix" in "prefix" or "suffix" won't match because of word boundaries (`\b`), but be careful with very short keywords.
+</Aside>
+
+## Impact on Scoring
+
+| Pattern | Signal Affected | Scoring Impact |
+|---------|-----------------|----------------|
+| Fix | `msg.fix_keyword_count`, `msg.fix_ratio` | Indirect (context for other signals) |
+| Fix | `followup.fix_commits` | High fix density = score penalty |
+| Revert | `msg.revert_count` | Any revert = -15 points |
+| WIP | `msg.wip_count`, WIP ratio | WIP ratio ≥0.3 = -8 points |
+
+<Aside type="tip">
+  Review your pattern changes after running Codemetry for a week. If scores seem off, check which commits are being classified and adjust patterns accordingly.
+</Aside>

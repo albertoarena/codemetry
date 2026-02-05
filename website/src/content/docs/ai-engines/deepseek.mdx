@@ -1,0 +1,167 @@
+---
+title: DeepSeek
+description: Configure DeepSeek for cost-effective Codemetry AI summaries
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+DeepSeek offers highly cost-effective AI models with strong reasoning capabilities, making it an excellent choice for budget-conscious usage.
+
+## Setup
+
+<Steps>
+
+1. **Get an API Key**
+
+   Visit [platform.deepseek.com](https://platform.deepseek.com/) to create an account and generate an API key.
+
+2. **Set Environment Variable**
+
+   ```bash
+   export DEEPSEEK_API_KEY=sk-...
+   ```
+
+   Or add to your `.env` file:
+   ```
+   DEEPSEEK_API_KEY=sk-...
+   ```
+
+3. **Configure Codemetry**
+
+   ```php
+   // config/codemetry.php
+   'ai' => [
+       'enabled' => true,
+       'engine' => 'deepseek',
+       'model' => null,  // Uses deepseek-chat by default
+   ],
+   ```
+
+4. **Run Analysis**
+
+   ```bash
+   php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=deepseek
+   ```
+
+</Steps>
+
+## Available Models
+
+| Model | Default | Cost | Quality | Speed |
+|-------|---------|------|---------|-------|
+| `deepseek-chat` | ✓ | Very Low | Good | Fast |
+| `deepseek-reasoner` | | Low | Better | Medium |
+
+### Choosing a Model
+
+**For routine analysis:** Use `deepseek-chat` (default)
+- Extremely cost-effective
+- Good quality for metric explanations
+- Fast response times
+
+**For deeper analysis:** Use `deepseek-reasoner`
+- Enhanced reasoning capabilities
+- Better at complex pattern analysis
+- Still very affordable
+
+```bash
+# Override model for single run
+php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=deepseek --ai-model=deepseek-reasoner
+```
+
+Or in configuration:
+
+```php
+'ai' => [
+    'engine' => 'deepseek',
+    'model' => 'deepseek-reasoner',
+],
+```
+
+## API Key Options
+
+Codemetry checks for API keys in this order:
+
+1. `CODEMETRY_AI_API_KEY` — Unified key for any engine
+2. `DEEPSEEK_API_KEY` — DeepSeek-specific key
+
+```bash
+# Option 1: Unified
+export CODEMETRY_AI_API_KEY=sk-...
+
+# Option 2: Engine-specific
+export DEEPSEEK_API_KEY=sk-...
+```
+
+## Cost Management
+
+DeepSeek offers some of the lowest API pricing available:
+
+**Estimated costs per 30-day analysis:**
+
+| Model | Input | Output | Total |
+|-------|-------|--------|-------|
+| deepseek-chat | ~$0.001 | ~$0.002 | ~$0.003 |
+| deepseek-reasoner | ~$0.002 | ~$0.004 | ~$0.006 |
+
+This makes DeepSeek approximately 5-10x cheaper than comparable models from other providers.
+
+<Aside type="tip">
+  DeepSeek is an excellent choice for teams running frequent analyses or analyzing many repositories. The cost savings add up significantly over time.
+</Aside>
+
+## Why Choose DeepSeek?
+
+**Advantages:**
+- Extremely low cost
+- Good quality for structured tasks
+- Fast response times
+- OpenAI-compatible API format
+
+**Considerations:**
+- Newer provider, less established
+- May have occasional availability issues
+- Quality can vary compared to premium models
+
+For Codemetry's use case (explaining structured metrics), DeepSeek performs very well at a fraction of the cost.
+
+## Troubleshooting
+
+### "Invalid API key"
+
+**Cause:** API key is incorrect or expired.
+
+**Solution:**
+- Verify key at [platform.deepseek.com](https://platform.deepseek.com/)
+- Check for typos
+- Regenerate key if needed
+
+### "Connection timeout"
+
+**Cause:** Network issues or API availability.
+
+**Solution:**
+- Check your network connectivity
+- Retry after a few seconds
+- Check DeepSeek status page
+
+### "Insufficient balance"
+
+**Cause:** API credit balance exhausted.
+
+**Solution:**
+- Add credits to your DeepSeek account
+- Check usage in dashboard
+
+### Lower Quality Responses
+
+**Symptom:** AI summaries seem less detailed or insightful.
+
+**Solution:**
+- Try `deepseek-reasoner` for better quality
+- Consider using a different engine for critical analyses
+- DeepSeek works well for routine use; use premium models for investigations
+
+<Aside type="note">
+  DeepSeek's quality is generally good for Codemetry's structured use case. If you notice quality issues, the cost savings often justify occasional less-perfect summaries.
+</Aside>

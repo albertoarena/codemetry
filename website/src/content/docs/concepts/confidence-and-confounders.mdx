@@ -1,0 +1,176 @@
+---
+title: Confidence & Confounders
+description: How Codemetry indicates reliability and context for each score
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Not all scores are equally reliable. Codemetry provides two mechanisms to help interpret results: **confidence scores** and **confounders**.
+
+## Confidence
+
+Confidence is a number from 0.0 to 1.0 indicating how reliable the score is.
+
+### How Confidence is Calculated
+
+**Base confidence: 0.6**
+
+**Increases:**
+| Condition | Adjustment |
+|-----------|------------|
+| 3+ commits in window | +0.1 |
+| Follow-up provider ran successfully | +0.1 |
+
+**Decreases:**
+| Condition | Adjustment |
+|-----------|------------|
+| 0-1 commits in window | -0.2 |
+| Key provider skipped | -0.1 per provider |
+
+**Clamped to 0.0 - 1.0**
+
+### Interpreting Confidence
+
+| Confidence | Interpretation |
+|------------|----------------|
+| 0.8+ | High confidence; reliable score |
+| 0.6-0.8 | Moderate confidence; reasonable estimate |
+| 0.4-0.6 | Low confidence; limited data |
+| Below 0.4 | Very low confidence; treat with skepticism |
+
+### Common Low-Confidence Scenarios
+
+**Weekend/holiday with few commits:**
+- Only 1-2 commits
+- Base score holds (70) but confidence drops
+- Don't overinterpret these days
+
+**Filtered analysis:**
+- `--author="Jane"` may show days with 0 commits from Jane
+- Low confidence reflects limited filtered data
+
+**Provider failures:**
+- Git errors, permission issues
+- Provider adds `provider_skipped:*` confounder
+- Confidence reduced accordingly
+
+<Aside type="tip">
+  When presenting Codemetry results to stakeholders, always include confidence. A "bad" day with 0.3 confidence is very different from a "bad" day with 0.9 confidence.
+</Aside>
+
+## Confounders
+
+Confounders are contextual flags that provide additional interpretation:
+
+### Available Confounders
+
+| Confounder | When Added | Meaning |
+|------------|------------|---------|
+| `large_refactor_suspected` | Churn p95+ but fix density ≤p50 | High activity without many follow-up fixes—likely intentional restructuring |
+| `formatting_or_rename_suspected` | High churn + high files touched + low follow-up | Many files changed with few corrections—likely formatting, renaming, or bulk changes |
+| `ai_unavailable` | AI enabled but couldn't run | Missing API key, network error, or API failure |
+| `provider_skipped:<id>` | Provider threw an error | Specific provider failed; signals from that provider are missing |
+
+### `large_refactor_suspected`
+
+This is the most important confounder for interpretation.
+
+**Triggered when:**
+- Churn is very high (95th+ percentile)
+- But follow-up fix density is low (≤50th percentile)
+
+**Interpretation:**
+- High churn usually means risk
+- But if the changes didn't need fixing, they were probably intentional
+- This could be:
+  - Planned refactoring
+  - Major feature completion
+  - Codebase reorganization
+
+<Aside type="note">
+  A "bad" score with `large_refactor_suspected` should be reviewed differently than one without. Check if the commits were a planned initiative.
+</Aside>
+
+### `formatting_or_rename_suspected`
+
+**Triggered when:**
+- High churn
+- Many files touched
+- Low follow-up fix rate
+
+**Interpretation:**
+- Bulk changes across many files
+- But not generating follow-up fixes
+- Likely:
+  - Code formatting (prettier, php-cs-fixer)
+  - Mass renames/refactors
+  - Automated changes
+
+### `ai_unavailable`
+
+**Triggered when:**
+- `--ai=1` flag was used
+- But AI engine couldn't complete
+
+**Causes:**
+- No API key configured
+- Invalid API key
+- Network timeout
+- API rate limiting
+
+**Impact:**
+- Analysis continues without AI summaries
+- Heuristic score unchanged
+- Just indicates AI feature didn't work
+
+### `provider_skipped:<id>`
+
+**Format:** `provider_skipped:change_shape`, `provider_skipped:follow_up_fix`, etc.
+
+**Triggered when:**
+- A signal provider throws an exception
+- Codemetry catches it and continues
+
+**Causes:**
+- Git command failures
+- Permission issues
+- Corrupt repository state
+
+**Impact:**
+- Signals from that provider are missing
+- Score based on available signals only
+- Confidence reduced by 0.1 per skipped provider
+
+## Using Confidence and Confounders Together
+
+### Decision Matrix
+
+| Score | Confidence | Confounders | Action |
+|-------|------------|-------------|--------|
+| Bad | High | None | Investigate; likely real issues |
+| Bad | High | `large_refactor_suspected` | Check if refactor was planned |
+| Bad | Low | None | Note it, but don't overreact |
+| Medium | High | None | Monitor; normal development |
+| Good | High | None | All clear |
+| Any | Low | `provider_skipped:*` | Check Git/system issues |
+
+### Example Interpretation
+
+```json
+{
+  "mood_score": 28,
+  "confidence": 0.85,
+  "confounders": ["large_refactor_suspected"]
+}
+```
+
+**Reading this:**
+- Score 28 = "bad" label
+- Confidence 0.85 = reliable score
+- Confounder = possibly intentional
+
+**Conclusion:** This was a high-activity day, but the `large_refactor_suspected` flag suggests it may have been planned work. Check the commits—if they're a coordinated refactoring effort, the "bad" score is expected and acceptable.
+
+<Aside type="caution">
+  Confounders explain patterns, not intent. Even with `large_refactor_suspected`, always verify with commit history when investigating bad scores.
+</Aside>

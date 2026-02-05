@@ -1,0 +1,159 @@
+---
+title: Anthropic
+description: Configure Anthropic (Claude) for Codemetry AI summaries
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+Anthropic's Claude models are known for thoughtful, nuanced responses and strong reasoning capabilities.
+
+## Setup
+
+<Steps>
+
+1. **Get an API Key**
+
+   Visit [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) to create an API key.
+
+2. **Set Environment Variable**
+
+   ```bash
+   export ANTHROPIC_API_KEY=sk-ant-...
+   ```
+
+   Or add to your `.env` file:
+   ```
+   ANTHROPIC_API_KEY=sk-ant-...
+   ```
+
+3. **Configure Codemetry**
+
+   ```php
+   // config/codemetry.php
+   'ai' => [
+       'enabled' => true,
+       'engine' => 'anthropic',
+       'model' => null,  // Uses claude-3-5-haiku by default
+   ],
+   ```
+
+4. **Run Analysis**
+
+   ```bash
+   php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=anthropic
+   ```
+
+</Steps>
+
+## Available Models
+
+| Model | Default | Cost | Quality | Speed |
+|-------|---------|------|---------|-------|
+| `claude-3-5-haiku-latest` | ✓ | Low | Good | Fast |
+| `claude-3-5-sonnet-latest` | | Medium | Excellent | Medium |
+| `claude-3-opus-latest` | | High | Best | Slow |
+
+### Choosing a Model
+
+**For routine analysis:** Use `claude-3-5-haiku-latest` (default)
+- Fast and cost-effective
+- Good quality explanations
+- Best for daily/weekly analyses
+
+**For detailed investigation:** Use `claude-3-5-sonnet-latest`
+- Superior reasoning about patterns
+- More comprehensive explanations
+- Good for monthly reviews or investigations
+
+**For critical analyses:** Use `claude-3-opus-latest`
+- Best-in-class reasoning
+- Most thorough explanations
+- Use sparingly due to cost
+
+```bash
+# Override model for single run
+php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=anthropic --ai-model=claude-3-5-sonnet-latest
+```
+
+Or in configuration:
+
+```php
+'ai' => [
+    'engine' => 'anthropic',
+    'model' => 'claude-3-5-sonnet-latest',
+],
+```
+
+## API Key Options
+
+Codemetry checks for API keys in this order:
+
+1. `CODEMETRY_AI_API_KEY` — Unified key for any engine
+2. `ANTHROPIC_API_KEY` — Anthropic-specific key
+
+```bash
+# Option 1: Unified
+export CODEMETRY_AI_API_KEY=sk-ant-...
+
+# Option 2: Engine-specific
+export ANTHROPIC_API_KEY=sk-ant-...
+```
+
+## Cost Management
+
+Anthropic charges per token. Codemetry sends minimal data:
+- ~500-1000 input tokens per day analyzed
+- ~200-500 output tokens per summary
+
+**Estimated costs per 30-day analysis:**
+
+| Model | Input | Output | Total |
+|-------|-------|--------|-------|
+| claude-3-5-haiku | ~$0.003 | ~$0.008 | ~$0.011 |
+| claude-3-5-sonnet | ~$0.01 | ~$0.05 | ~$0.06 |
+| claude-3-opus | ~$0.05 | ~$0.25 | ~$0.30 |
+
+<Aside type="tip">
+  Claude Haiku offers excellent value for Codemetry's use case. Sonnet is recommended only when you need deeper analysis.
+</Aside>
+
+## Troubleshooting
+
+### "Invalid API key"
+
+**Cause:** API key is incorrect or expired.
+
+**Solution:**
+- Verify key at [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
+- Check for typos or extra whitespace
+- Ensure key is active
+
+### "Rate limit exceeded"
+
+**Cause:** Too many requests or exceeded tier limits.
+
+**Solution:**
+- Wait and retry (usually 1-5 minutes)
+- Check usage in Anthropic console
+- Consider requesting higher limits
+
+### "Overloaded"
+
+**Cause:** Anthropic API is experiencing high load.
+
+**Solution:**
+- Retry after a few seconds
+- This is usually temporary
+
+### "Model not available"
+
+**Cause:** Model name incorrect or not available in your region.
+
+**Solution:**
+- Check model name spelling
+- Use a different model variant
+- Verify API access includes the requested model
+
+<Aside type="note">
+  Anthropic occasionally updates model names. If a model stops working, check the [Anthropic documentation](https://docs.anthropic.com/en/docs/about-claude/models) for current model names.
+</Aside>

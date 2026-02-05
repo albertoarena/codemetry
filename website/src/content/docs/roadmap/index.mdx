@@ -1,0 +1,139 @@
+---
+title: Roadmap
+description: Current status and planned features for Codemetry
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Codemetry is actively developed. Here's what's available now and what's planned.
+
+## Current Version: V1
+
+### Core Features
+
+- **Git Analysis** — Churn, scatter, commit patterns
+- **Follow-up Fix Detection** — Identifies corrections after changes
+- **Baseline Normalization** — Compare against repository norms
+- **Heuristic Scoring** — Deterministic 0-100 scores with labels
+- **Confidence Scores** — Indicates result reliability
+- **Confounders** — Context flags for interpretation
+- **Reasons** — Human-readable score explanations
+
+### Framework Support
+
+- **Laravel** — Full adapter with Artisan command
+- **Core Package** — Framework-agnostic for any PHP project
+
+### AI Integration (Opt-In)
+
+- **OpenAI** — GPT-4o, GPT-4, GPT-3.5
+- **Anthropic** — Claude 3.5 Sonnet, Opus, Haiku
+- **DeepSeek** — DeepSeek Chat
+- **Google** — Gemini Pro, Gemini Flash
+
+### Output Formats
+
+- **Table** — Terminal-friendly display
+- **JSON** — Machine-readable with full details
+
+## Planned Features
+
+### Near Term
+
+<CardGrid>
+  <Card title="Custom Scoring" icon="setting">
+    Configurable thresholds and weights for the scoring algorithm. Adjust penalties and rewards to match your team's priorities.
+  </Card>
+  <Card title="Quality Tool Providers" icon="puzzle">
+    Built-in providers for PHPStan, ESLint, Psalm, and other static analysis tools.
+  </Card>
+  <Card title="Team Dashboards" icon="laptop">
+    Web interface for viewing trends across repositories and time periods.
+  </Card>
+  <Card title="GitHub Action" icon="github">
+    Official GitHub Action for CI/CD integration with PR comments.
+  </Card>
+</CardGrid>
+
+### Medium Term
+
+<CardGrid>
+  <Card title="Multi-Repository" icon="open-book">
+    Aggregate analysis across multiple repositories with unified reporting.
+  </Card>
+  <Card title="Trend Detection" icon="graph">
+    Automatic detection of improving or declining patterns over time.
+  </Card>
+  <Card title="Alerting" icon="warning">
+    Notifications when scores drop below configurable thresholds.
+  </Card>
+  <Card title="Symfony Adapter" icon="puzzle">
+    Official adapter for Symfony framework.
+  </Card>
+</CardGrid>
+
+### Future Exploration
+
+- **IDE Integration** — Real-time mood indicators in VS Code, PhpStorm
+- **API Service** — Hosted analysis for repositories
+- **AI Score Adjustment** — Allow AI to suggest score modifications
+- **Custom Window Sizes** — Analyze by week, sprint, or custom periods
+- **Historical Comparison** — Compare current period to same period last year
+
+## What V1 Doesn't Include
+
+These features were considered but deferred:
+
+### Emotion/Sentiment Analysis
+
+Codemetry explicitly does **not** analyze emotions. The "mood" terminology refers to code health indicators, not developer feelings. This is by design, not a limitation.
+
+### Individual Performance Tracking
+
+While `--author` filtering exists for focused analysis, Codemetry is not designed for performance management. Use it for understanding code patterns, not evaluating people.
+
+### Real-Time Analysis
+
+V1 analyzes historical data. Real-time commit analysis (webhooks, streaming) may come later but isn't the current focus.
+
+### Non-Git Version Control
+
+Codemetry currently supports Git only. SVN, Mercurial, or Perforce support may be considered based on demand.
+
+## Contributing
+
+Interested in contributing to Codemetry's development?
+
+### Ways to Help
+
+1. **Report Issues** — Found a bug or unexpected behavior? Open an issue.
+2. **Request Features** — Have an idea? Share it in discussions.
+3. **Submit PRs** — Bug fixes and improvements welcome.
+4. **Build Providers** — Create and share custom signal providers.
+5. **Write Adapters** — Help support more frameworks.
+
+### Development Focus
+
+Current development priorities:
+1. Stability and reliability of core features
+2. Documentation and examples
+3. Community-requested improvements
+4. Performance optimization
+
+<Aside type="tip">
+  Check the GitHub issues for "good first issue" labels if you're looking to contribute.
+</Aside>
+
+## Feedback
+
+Your feedback shapes Codemetry's direction:
+- Star the repository to show support
+- Open issues for bugs and feature requests
+- Join discussions for broader conversations
+- Share how you use Codemetry
+
+The roadmap evolves based on real-world usage and community input.
+
+---
+
+*Last updated: 2024*

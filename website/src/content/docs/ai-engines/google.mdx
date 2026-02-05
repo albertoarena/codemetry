@@ -1,0 +1,191 @@
+---
+title: Google AI
+description: Configure Google Gemini for Codemetry AI summaries
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+Google's Gemini models offer strong reasoning capabilities with good integration into Google Cloud environments.
+
+## Setup
+
+<Steps>
+
+1. **Get an API Key**
+
+   Visit [aistudio.google.com/apikey](https://aistudio.google.com/apikey) to create an API key.
+
+   Alternatively, use Google Cloud's Vertex AI for enterprise deployments.
+
+2. **Set Environment Variable**
+
+   ```bash
+   export GOOGLE_AI_API_KEY=AIza...
+   ```
+
+   Or add to your `.env` file:
+   ```
+   GOOGLE_AI_API_KEY=AIza...
+   ```
+
+3. **Configure Codemetry**
+
+   ```php
+   // config/codemetry.php
+   'ai' => [
+       'enabled' => true,
+       'engine' => 'google',
+       'model' => null,  // Uses gemini-1.5-flash by default
+   ],
+   ```
+
+4. **Run Analysis**
+
+   ```bash
+   php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=google
+   ```
+
+</Steps>
+
+## Available Models
+
+| Model | Default | Cost | Quality | Speed |
+|-------|---------|------|---------|-------|
+| `gemini-1.5-flash` | ✓ | Low | Good | Very Fast |
+| `gemini-1.5-pro` | | Medium | Excellent | Medium |
+| `gemini-2.0-flash-exp` | | Low | Better | Very Fast |
+
+### Choosing a Model
+
+**For routine analysis:** Use `gemini-1.5-flash` (default)
+- Very fast response times
+- Cost-effective
+- Good quality for metric explanations
+
+**For detailed investigation:** Use `gemini-1.5-pro`
+- Better reasoning capabilities
+- More thorough explanations
+- Worth the extra cost for deep dives
+
+**For experimental features:** Use `gemini-2.0-flash-exp`
+- Latest capabilities
+- May have improved quality
+- Subject to change as it's experimental
+
+```bash
+# Override model for single run
+php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=google --ai-model=gemini-1.5-pro
+```
+
+Or in configuration:
+
+```php
+'ai' => [
+    'engine' => 'google',
+    'model' => 'gemini-1.5-pro',
+],
+```
+
+## API Key Options
+
+Codemetry checks for API keys in this order:
+
+1. `CODEMETRY_AI_API_KEY` — Unified key for any engine
+2. `GOOGLE_AI_API_KEY` — Google AI-specific key
+
+```bash
+# Option 1: Unified
+export CODEMETRY_AI_API_KEY=AIza...
+
+# Option 2: Engine-specific
+export GOOGLE_AI_API_KEY=AIza...
+```
+
+## Cost Management
+
+Google AI Studio offers generous free tiers and competitive pricing:
+
+**Free Tier (AI Studio):**
+- 15 requests per minute for Flash models
+- 2 requests per minute for Pro models
+- No cost for moderate usage
+
+**Estimated costs per 30-day analysis (beyond free tier):**
+
+| Model | Input | Output | Total |
+|-------|-------|--------|-------|
+| gemini-1.5-flash | ~$0.002 | ~$0.003 | ~$0.005 |
+| gemini-1.5-pro | ~$0.01 | ~$0.03 | ~$0.04 |
+
+<Aside type="tip">
+  The free tier is often sufficient for individual developers or small teams. Check your usage in Google AI Studio to monitor consumption.
+</Aside>
+
+## Google Cloud Integration
+
+For enterprise deployments, consider using Vertex AI:
+
+1. Enable Vertex AI API in Google Cloud Console
+2. Set up authentication (service account or ADC)
+3. Use Vertex AI endpoints instead of AI Studio
+
+This provides:
+- Enterprise SLAs
+- VPC integration
+- Compliance certifications
+- Centralized billing
+
+<Aside type="note">
+  Codemetry V1 supports Google AI Studio. Vertex AI support may be added in future versions.
+</Aside>
+
+## Troubleshooting
+
+### "Invalid API key"
+
+**Cause:** API key is incorrect or not enabled.
+
+**Solution:**
+- Verify key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+- Check that the key is enabled for the Generative AI API
+- Regenerate if needed
+
+### "Quota exceeded"
+
+**Cause:** Free tier limits reached.
+
+**Solution:**
+- Wait for quota reset (resets periodically)
+- Enable billing for higher limits
+- Use Flash models for lower quota consumption
+
+### "Model not found"
+
+**Cause:** Model name incorrect or model deprecated.
+
+**Solution:**
+- Check current model names in [Google AI documentation](https://ai.google.dev/gemini-api/docs/models/gemini)
+- Model names may change as versions update
+- Use a different model variant
+
+### "Region not supported"
+
+**Cause:** Google AI not available in your region.
+
+**Solution:**
+- Check Google AI availability for your region
+- Consider using a VPN for development
+- Use a different AI engine
+
+### Slow Responses with Pro Model
+
+**Symptom:** `gemini-1.5-pro` takes longer than expected.
+
+**Solution:**
+- This is normal; Pro models prioritize quality over speed
+- Use `gemini-1.5-flash` for faster responses
+- Consider Pro only for detailed investigations
+
+<Aside type="caution">
+  Google's model naming and availability changes periodically. If you encounter issues, check the Google AI documentation for the latest model names and availability.
+</Aside>

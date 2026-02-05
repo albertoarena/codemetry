@@ -1,0 +1,128 @@
+---
+title: Installation
+description: Install Codemetry in your Laravel project
+---
+
+import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Requirements
+
+- PHP 8.2 or higher
+- Laravel 11.x or 12.x
+- Git installed and accessible from command line
+
+## Installation
+
+<Steps>
+
+1. **Install via Composer**
+
+   ```bash
+   composer require codemetry/laravel
+   ```
+
+   The service provider is auto-discovered—no manual registration needed.
+
+2. **Publish the configuration (optional)**
+
+   ```bash
+   php artisan vendor:publish --tag=codemetry-config
+   ```
+
+   This creates `config/codemetry.php` where you can customize:
+   - Baseline days (default: 56)
+   - Follow-up horizon (default: 3 days)
+   - Keyword patterns for fix/revert/wip detection
+   - AI engine settings
+
+3. **Verify installation**
+
+   ```bash
+   php artisan codemetry:analyze --days=1
+   ```
+
+   If you see a table with mood results, you're all set!
+
+</Steps>
+
+## Configuration File
+
+After publishing, you'll have `config/codemetry.php`:
+
+```php
+return [
+    // Days of history for baseline distribution
+    'baseline_days' => 56,
+
+    // Days after a window to scan for follow-up fixes
+    'follow_up_horizon_days' => 3,
+
+    // Commit message patterns
+    'keywords' => [
+        'fix_pattern' => '/\b(fix|bug|hotfix|patch|typo|oops)\b/i',
+        'revert_pattern' => '/\b(revert)\b/i',
+        'wip_pattern' => '/\b(wip|tmp|debug|hack)\b/i',
+    ],
+
+    // AI configuration (optional)
+    'ai' => [
+        'enabled' => false,
+        'engine' => env('CODEMETRY_AI_ENGINE', 'openai'),
+        'api_key' => env('CODEMETRY_AI_API_KEY'),
+        'model' => env('CODEMETRY_AI_MODEL'),
+    ],
+];
+```
+
+<Aside type="tip">
+  You don't need to publish the config to use Codemetry. The defaults work well for most projects.
+</Aside>
+
+## Installing from GitHub (Pre-Release)
+
+If the package isn't on Packagist yet, install directly from GitHub:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/albertoarena/codemetry"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "codemetry/laravel": "dev-master"
+    }
+}
+```
+
+Then run:
+
+```bash
+composer update
+```
+
+## Troubleshooting
+
+### Command not found
+
+If `php artisan codemetry:analyze` returns "Command not found", the service provider may not be loaded. Try:
+
+```bash
+php artisan package:discover --ansi
+```
+
+### Git errors
+
+Codemetry requires Git access. Ensure:
+- You're running the command from a Git repository
+- The `git` command is available in your PATH
+- The repository has commit history (not a fresh init)
+
+### Memory issues on large repos
+
+For repositories with extensive history, the baseline calculation may use significant memory. Try:
+- Reducing `baseline_days` in config
+- Running with increased PHP memory: `php -d memory_limit=512M artisan codemetry:analyze`

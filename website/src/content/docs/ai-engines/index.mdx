@@ -1,0 +1,174 @@
+---
+title: AI Engines Overview
+description: Optional AI-powered explanations for Codemetry results
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Codemetry can optionally use AI to generate human-readable explanations of analysis results. AI summarization is **entirely opt-in** and **privacy-conscious**.
+
+## Key Principles
+
+### Opt-In Only
+
+AI features are disabled by default. You must explicitly enable them:
+
+```bash
+php artisan codemetry:analyze --days=7 --ai=1
+```
+
+Or in configuration:
+
+```php
+'ai' => [
+    'enabled' => true,
+    // ...
+],
+```
+
+### Metrics Only
+
+**AI engines never receive code or diffs.** They only receive:
+- Aggregated metrics (churn, scatter, fix counts)
+- Normalized values (z-scores, percentiles)
+- Computed scores and labels
+- Confounders (flags like `large_refactor_suspected`)
+
+This design ensures your source code stays private.
+
+### Graceful Degradation
+
+If AI is enabled but unavailable:
+- Analysis continues normally
+- Heuristic scores are unaffected
+- `ai_unavailable` confounder is added
+- No AI summary in output
+
+## Supported Engines
+
+<CardGrid>
+  <Card title="OpenAI" icon="rocket">
+    GPT-4o, GPT-4, GPT-3.5-turbo. Best balance of quality and cost.
+  </Card>
+  <Card title="Anthropic" icon="star">
+    Claude 3.5 Sonnet, Claude 3 Opus/Haiku. Excellent reasoning quality.
+  </Card>
+  <Card title="DeepSeek" icon="lightning">
+    DeepSeek Chat. Cost-effective alternative.
+  </Card>
+  <Card title="Google" icon="sun">
+    Gemini Pro, Gemini Flash. Google Cloud integration.
+  </Card>
+</CardGrid>
+
+## Quick Setup
+
+### 1. Choose an Engine
+
+```bash
+# Set in environment
+export CODEMETRY_AI_ENGINE=openai  # or: anthropic, deepseek, google
+```
+
+### 2. Provide API Key
+
+```bash
+# Engine-specific key
+export OPENAI_API_KEY=sk-...
+# Or unified key
+export CODEMETRY_AI_API_KEY=sk-...
+```
+
+### 3. Run with AI
+
+```bash
+php artisan codemetry:analyze --days=7 --ai=1
+```
+
+## Configuration Options
+
+```php
+// config/codemetry.php
+'ai' => [
+    'enabled' => false,  // Set true to enable by default
+    'engine' => env('CODEMETRY_AI_ENGINE', 'openai'),
+    'model' => env('CODEMETRY_AI_MODEL', null),  // null = engine default
+    'api_key' => env('CODEMETRY_AI_API_KEY', null),
+],
+```
+
+| Option | Description |
+|--------|-------------|
+| `enabled` | Enable AI by default (can override with `--ai=0/1`) |
+| `engine` | Which AI provider to use |
+| `model` | Specific model (null = use engine's default) |
+| `api_key` | API key (falls back to engine-specific env vars) |
+
+## What AI Adds
+
+When AI is enabled, each analysis window includes:
+
+```json
+{
+  "ai_summary": {
+    "explanation_bullets": [
+      "High churn (95th percentile) indicates major development activity.",
+      "The presence of reverts suggests some changes needed rollback.",
+      "Despite the bad score, the large_refactor_suspected flag hints at planned restructuring.",
+      "Consider reviewing commit history to confirm this was intentional work."
+    ],
+    "score_delta": 0,
+    "confidence_delta": 0.0,
+    "label_override": null
+  }
+}
+```
+
+### `explanation_bullets`
+
+Human-readable insights about the day's metrics. Useful for:
+- Team reports
+- Executive summaries
+- Understanding why a day scored poorly
+
+### `score_delta` / `confidence_delta`
+
+AI can suggest score adjustments (V1: always 0). Future versions may allow AI to fine-tune scores based on context.
+
+### `label_override`
+
+AI can suggest overriding the label (V1: always null). Example: changing "bad" to "medium" if metrics suggest false positive.
+
+<Aside type="note">
+  In V1, AI provides explanations only. Score modifications are reserved for future versions with more sophisticated prompts.
+</Aside>
+
+## Cost Considerations
+
+AI calls add cost to each analysis. Typical costs per day analyzed:
+
+| Engine | Model | Approximate Cost |
+|--------|-------|-----------------|
+| OpenAI | gpt-4o-mini | ~$0.001 |
+| OpenAI | gpt-4o | ~$0.01 |
+| Anthropic | claude-3-5-haiku | ~$0.001 |
+| Anthropic | claude-3-5-sonnet | ~$0.01 |
+| DeepSeek | deepseek-chat | ~$0.0005 |
+| Google | gemini-1.5-flash | ~$0.001 |
+
+For a 30-day analysis with GPT-4o: ~$0.30
+
+<Aside type="tip">
+  Use lighter models (gpt-4o-mini, claude-3-5-haiku, gemini-flash) for routine analyses. Reserve heavier models for deep investigations.
+</Aside>
+
+## Without AI
+
+Codemetry is fully functional without AI:
+
+- Heuristic scores are deterministic and reliable
+- Reasons explain score contributors
+- Confounders provide context flags
+- JSON output includes all raw data
+
+AI adds explanatory convenience, not core functionality.

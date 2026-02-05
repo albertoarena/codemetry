@@ -1,0 +1,128 @@
+---
+title: Configuration Overview
+description: How to configure Codemetry for your project
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Codemetry is designed to work out of the box with sensible defaults. Configuration is optional but allows fine-tuning for your specific workflow.
+
+## Publishing the Config File
+
+```bash
+php artisan vendor:publish --tag=codemetry-config
+```
+
+This creates `config/codemetry.php` in your Laravel project.
+
+## Configuration Options
+
+### Analysis Window
+
+```php
+'baseline_days' => 56,  // Days of history for baseline comparison
+'follow_up_horizon_days' => 3,  // Days to scan for follow-up fixes
+```
+
+**`baseline_days`** determines how much history is used to establish "normal" patterns:
+- Default 56 days (8 weeks) provides stable baselines
+- Shorter periods are more reactive to recent changes
+- Longer periods are more stable but slower to adapt
+
+**`follow_up_horizon_days`** controls how far ahead to look for fix commits:
+- Default 3 days catches most immediate fixes
+- Increase if your team's fix cycle is longer
+- Shorter values may miss delayed fixes
+
+### Keyword Patterns
+
+```php
+'keywords' => [
+    'fix_pattern' => '/\b(fix|bug|hotfix|patch|typo|oops)\b/i',
+    'revert_pattern' => '/\b(revert)\b/i',
+    'wip_pattern' => '/\b(wip|tmp|debug|hack)\b/i',
+],
+```
+
+These regex patterns identify commit types:
+- **Fix pattern**: Commits that fix issues
+- **Revert pattern**: Commits that undo changes
+- **WIP pattern**: Work-in-progress or temporary commits
+
+See [Keywords Configuration](/codemetry/configuration/keywords/) for customization details.
+
+### AI Configuration
+
+```php
+'ai' => [
+    'enabled' => false,  // AI is opt-in
+    'engine' => env('CODEMETRY_AI_ENGINE', 'openai'),
+    'model' => env('CODEMETRY_AI_MODEL', null),  // null = use engine default
+    'api_key' => env('CODEMETRY_AI_API_KEY', null),
+],
+```
+
+AI summarization is disabled by default. To enable:
+
+1. Set `enabled` to `true` or use `--ai=1` flag
+2. Configure your preferred engine
+3. Provide API credentials via environment variables
+
+See [AI Engines](/codemetry/ai-engines/) for setup instructions.
+
+## Environment Variables
+
+Codemetry respects these environment variables:
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `CODEMETRY_AI_ENGINE` | AI engine to use | `openai` |
+| `CODEMETRY_AI_MODEL` | Model override | Engine default |
+| `CODEMETRY_AI_API_KEY` | API key for AI engine | — |
+| `OPENAI_API_KEY` | OpenAI API key (fallback) | — |
+| `ANTHROPIC_API_KEY` | Anthropic API key (fallback) | — |
+| `DEEPSEEK_API_KEY` | DeepSeek API key (fallback) | — |
+| `GOOGLE_AI_API_KEY` | Google AI API key (fallback) | — |
+
+## CLI Overrides
+
+Most configuration options can be overridden via CLI flags:
+
+```bash
+# Override baseline period
+php artisan codemetry:analyze --days=7 --baseline-days=30
+
+# Override follow-up horizon
+php artisan codemetry:analyze --days=7 --follow-up-horizon=5
+
+# Enable AI for single run
+php artisan codemetry:analyze --days=7 --ai=1
+
+# Specify AI engine
+php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=anthropic
+```
+
+<Aside type="tip">
+  CLI flags override config file settings, which override defaults. This allows project-level configuration with per-run customization.
+</Aside>
+
+## Recommended Starting Configuration
+
+For most projects, the defaults work well. Consider adjusting:
+
+1. **`baseline_days`**: Increase to 90 for very stable projects, decrease to 30 for fast-moving projects
+2. **`follow_up_horizon_days`**: Increase to 5-7 if your team typically fixes issues later in the week
+3. **Keywords**: Customize if your team uses different conventions
+
+```php
+// Example: Fast-moving startup project
+return [
+    'baseline_days' => 30,
+    'follow_up_horizon_days' => 5,
+    'keywords' => [
+        'fix_pattern' => '/\b(fix|bug|hotfix|patch|typo|oops|broken)\b/i',
+        'revert_pattern' => '/\b(revert|rollback)\b/i',
+        'wip_pattern' => '/\b(wip|tmp|debug|hack|todo)\b/i',
+    ],
+];
+```

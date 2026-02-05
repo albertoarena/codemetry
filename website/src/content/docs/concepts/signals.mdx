@@ -1,0 +1,147 @@
+---
+title: Signals
+description: The measurable indicators Codemetry extracts from your Git history
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Signals are the raw measurements Codemetry extracts from your Git repository. Each signal captures a specific aspect of development activity.
+
+## Signal Categories
+
+Codemetry V1 includes three signal providers:
+
+1. **Change Shape** — What changed and how much
+2. **Commit Messages** — Patterns in commit language
+3. **Follow-up Fixes** — Post-change corrections
+
+## Change Shape Signals
+
+These signals measure the physical characteristics of code changes:
+
+| Signal | Type | Description |
+|--------|------|-------------|
+| `change.added` | numeric | Lines added |
+| `change.deleted` | numeric | Lines deleted |
+| `change.churn` | numeric | Total lines changed (added + deleted) |
+| `change.commits_count` | numeric | Number of commits |
+| `change.files_touched` | numeric | Unique files modified |
+| `change.churn_per_commit` | numeric | Average churn per commit |
+| `change.scatter` | numeric | Unique directories touched |
+
+### Interpreting Change Shape
+
+**Churn** is the primary indicator of activity volume. High churn isn't inherently bad—it depends on context:
+- Normal during feature development
+- Expected during refactoring
+- Concerning if accompanied by many follow-up fixes
+
+**Scatter** measures how spread out changes are. High scatter can indicate:
+- Cross-cutting changes (possibly risky)
+- Broad refactoring
+- Unrelated changes bundled together
+
+<Aside type="tip">
+  A high scatter with low follow-up fixes often indicates intentional, well-planned changes.
+</Aside>
+
+## Commit Message Signals
+
+These signals analyze commit messages for patterns:
+
+| Signal | Type | Description |
+|--------|------|-------------|
+| `msg.fix_keyword_count` | numeric | Commits containing fix-related words |
+| `msg.revert_count` | numeric | Commits containing "revert" |
+| `msg.wip_count` | numeric | Commits containing WIP indicators |
+| `msg.fix_ratio` | numeric | Proportion of fix commits to total |
+
+### Keyword Patterns
+
+Default patterns (configurable in `config/codemetry.php`):
+
+```php
+'keywords' => [
+    'fix_pattern' => '/\b(fix|bug|hotfix|patch|typo|oops)\b/i',
+    'revert_pattern' => '/\b(revert)\b/i',
+    'wip_pattern' => '/\b(wip|tmp|debug|hack)\b/i',
+],
+```
+
+### Interpreting Message Signals
+
+**Fix keywords** suggest bug fixes or corrections. A high fix ratio means many commits are addressing issues rather than building new features.
+
+**Reverts** are strong indicators of problems—something went wrong enough to undo. Even one revert adds significant penalty to the score.
+
+**WIP indicators** suggest incomplete or experimental work. Occasional WIP commits are normal; many WIP commits may indicate rushed or fragmented development.
+
+## Follow-up Fix Signals
+
+These signals detect corrections made shortly after changes:
+
+| Signal | Type | Description |
+|--------|------|-------------|
+| `followup.horizon_days` | numeric | Days scanned after window |
+| `followup.touching_commits` | numeric | Commits touching same files |
+| `followup.fix_commits` | numeric | Fix commits touching same files |
+| `followup.fix_density` | numeric | Fix commits per churn unit |
+
+### How Follow-up Detection Works
+
+After analyzing a day's commits, Codemetry looks ahead (default: 3 days) for:
+1. Commits that touch the same files
+2. Among those, commits with fix keywords
+
+This detects the "fix it later" pattern—a strong signal that the original changes had issues.
+
+```
+Day 1: Big feature commit (touches auth.php, user.php)
+Day 2: "fix: auth validation" (touches auth.php) ← detected as follow-up fix
+Day 3: "hotfix: user null check" (touches user.php) ← detected as follow-up fix
+```
+
+### Interpreting Follow-up Signals
+
+**High fix density** = many corrections relative to the amount of code changed. This is concerning because it suggests:
+- Rushed initial implementation
+- Insufficient testing
+- Complex changes that weren't fully understood
+
+**Low fix density with high churn** = large changes that didn't need fixing. This is positive and may indicate:
+- Well-planned refactoring
+- Thoroughly reviewed code
+- Low-risk changes (formatting, renames)
+
+<Aside type="note">
+  Follow-up detection uses a configurable horizon. Increase `follow_up_horizon_days` if your team's fix cycle is longer than 3 days.
+</Aside>
+
+## Signal Flow
+
+```
+Git Repository
+    │
+    ├── git log (commits, authors, dates)
+    │       │
+    │       └── ChangeShapeProvider → change.* signals
+    │       └── CommitMessageProvider → msg.* signals
+    │
+    ├── git show --numstat (line counts)
+    │       │
+    │       └── Per-file insertions/deletions
+    │
+    └── Horizon scanning (future commits)
+            │
+            └── FollowUpFixProvider → followup.* signals
+```
+
+## Extending with Custom Signals
+
+You can create custom signal providers. See [Extending Codemetry](/codemetry/extending/index/) for details.
+
+Example use cases:
+- Static analysis results (PHPStan, ESLint)
+- Test coverage changes
+- Documentation updates
+- CI/CD metrics

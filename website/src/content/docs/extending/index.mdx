@@ -1,0 +1,287 @@
+---
+title: Extending Codemetry
+description: Add custom signal providers and integrations
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Codemetry is designed to be extensible. You can add custom signal providers to incorporate additional metrics into the analysis.
+
+## Signal Provider Architecture
+
+Signal providers are the plugin system for Codemetry. Each provider:
+1. Receives commit data for a time window
+2. Extracts signals (measurements)
+3. Returns a `SignalSet` with named values
+
+```
+Git Data → Signal Provider → SignalSet
+                ↓
+         Normalization → Scoring
+```
+
+## Creating a Custom Provider
+
+### Step 1: Implement the Interface
+
+```php
+<?php
+
+namespace App\Codemetry\Providers;
+
+use Codemetry\Core\Signals\SignalProvider;
+use Codemetry\Core\Domain\RepoSnapshot;
+use Codemetry\Core\Domain\SignalSet;
+use Codemetry\Core\Domain\Signal;
+use DateTimeImmutable;
+
+class TestCoverageProvider implements SignalProvider
+{
+    public function id(): string
+    {
+        return 'test_coverage';
+    }
+
+    public function collect(
+        RepoSnapshot $snapshot,
+        DateTimeImmutable $windowStart,
+        DateTimeImmutable $windowEnd
+    ): SignalSet {
+        // Your logic to gather coverage data
+        $coverage = $this->getCoverageForWindow($snapshot, $windowStart, $windowEnd);
+
+        return new SignalSet([
+            new Signal(
+                key: 'coverage.percentage',
+                type: 'numeric',
+                value: $coverage['percentage'],
+                description: 'Test coverage percentage'
+            ),
+            new Signal(
+                key: 'coverage.lines_covered',
+                type: 'numeric',
+                value: $coverage['lines_covered'],
+                description: 'Number of lines covered by tests'
+            ),
+            new Signal(
+                key: 'coverage.lines_total',
+                type: 'numeric',
+                value: $coverage['lines_total'],
+                description: 'Total number of lines'
+            ),
+        ]);
+    }
+
+    private function getCoverageForWindow(
+        RepoSnapshot $snapshot,
+        DateTimeImmutable $start,
+        DateTimeImmutable $end
+    ): array {
+        // Implementation depends on your coverage tool
+        // Could read from coverage reports, CI artifacts, etc.
+        return [
+            'percentage' => 85.5,
+            'lines_covered' => 1200,
+            'lines_total' => 1403,
+        ];
+    }
+}
+```
+
+### Step 2: Register the Provider
+
+```php
+// In a service provider or bootstrap file
+use Codemetry\Core\Analyzer;
+use App\Codemetry\Providers\TestCoverageProvider;
+
+$analyzer = app(Analyzer::class);
+$analyzer->registerProvider(new TestCoverageProvider());
+```
+
+### Step 3: Use in Analysis
+
+Your provider's signals will automatically be:
+- Collected during analysis
+- Normalized against baseline
+- Available in output
+
+<Aside type="note">
+  Custom provider signals are normalized but don't automatically affect scoring. V1 uses a fixed scoring algorithm. Custom scoring integration is planned for future versions.
+</Aside>
+
+## Provider Requirements
+
+### Error Handling
+
+Providers should not throw exceptions. If something fails:
+1. Return empty or partial signals
+2. The system adds `provider_skipped:<id>` confounder
+3. Analysis continues with available data
+
+```php
+public function collect(
+    RepoSnapshot $snapshot,
+    DateTimeImmutable $windowStart,
+    DateTimeImmutable $windowEnd
+): SignalSet {
+    try {
+        $data = $this->fetchData($snapshot);
+        return new SignalSet([/* signals */]);
+    } catch (\Exception $e) {
+        // Log the error but don't break the pipeline
+        Log::warning("TestCoverageProvider failed: " . $e->getMessage());
+        return new SignalSet([]);  // Empty set
+    }
+}
+```
+
+### Signal Naming
+
+Follow the naming convention: `<category>.<metric>`
+
+- `coverage.percentage`
+- `coverage.delta`
+- `lint.errors`
+- `lint.warnings`
+- `complexity.average`
+- `complexity.max`
+
+### Immutability
+
+Signals and SignalSets are immutable. Don't modify after creation:
+
+```php
+// Good: Create new
+$signals = new SignalSet([
+    new Signal('coverage.percentage', 'numeric', 85.5, 'Coverage'),
+]);
+
+// Bad: Never try to modify
+// $signals->add(...);  // This doesn't exist
+```
+
+## Example Providers
+
+### PHPStan Integration
+
+```php
+class PhpStanProvider implements SignalProvider
+{
+    public function id(): string
+    {
+        return 'phpstan';
+    }
+
+    public function collect(
+        RepoSnapshot $snapshot,
+        DateTimeImmutable $windowStart,
+        DateTimeImmutable $windowEnd
+    ): SignalSet {
+        // Run PHPStan or read from cached results
+        $result = $this->runPhpStan($snapshot->repoPath());
+
+        return new SignalSet([
+            new Signal('phpstan.errors', 'numeric', $result['errors'], 'PHPStan errors'),
+            new Signal('phpstan.level', 'numeric', $result['level'], 'PHPStan level used'),
+        ]);
+    }
+}
+```
+
+### ESLint Integration
+
+```php
+class EsLintProvider implements SignalProvider
+{
+    public function id(): string
+    {
+        return 'eslint';
+    }
+
+    public function collect(
+        RepoSnapshot $snapshot,
+        DateTimeImmutable $windowStart,
+        DateTimeImmutable $windowEnd
+    ): SignalSet {
+        $result = $this->runEsLint($snapshot->repoPath());
+
+        return new SignalSet([
+            new Signal('eslint.errors', 'numeric', $result['errors'], 'ESLint errors'),
+            new Signal('eslint.warnings', 'numeric', $result['warnings'], 'ESLint warnings'),
+        ]);
+    }
+}
+```
+
+### CI/CD Metrics
+
+```php
+class CiMetricsProvider implements SignalProvider
+{
+    public function id(): string
+    {
+        return 'ci_metrics';
+    }
+
+    public function collect(
+        RepoSnapshot $snapshot,
+        DateTimeImmutable $windowStart,
+        DateTimeImmutable $windowEnd
+    ): SignalSet {
+        // Fetch from CI API (GitHub Actions, GitLab CI, etc.)
+        $builds = $this->fetchBuilds($snapshot, $windowStart, $windowEnd);
+
+        return new SignalSet([
+            new Signal('ci.builds_total', 'numeric', count($builds), 'Total builds'),
+            new Signal('ci.builds_failed', 'numeric', $this->countFailed($builds), 'Failed builds'),
+            new Signal('ci.avg_duration', 'numeric', $this->avgDuration($builds), 'Average build duration'),
+        ]);
+    }
+}
+```
+
+## Best Practices
+
+### 1. Keep Providers Focused
+
+Each provider should handle one data source or concern:
+- ✅ `TestCoverageProvider` — just coverage
+- ✅ `PhpStanProvider` — just PHPStan
+- ❌ `QualityProvider` — too broad
+
+### 2. Handle Missing Data
+
+Not all windows will have data. Handle gracefully:
+
+```php
+if (empty($commits)) {
+    return new SignalSet([
+        new Signal('coverage.percentage', 'numeric', null, 'No data'),
+    ]);
+}
+```
+
+### 3. Document Signal Meanings
+
+Use clear descriptions:
+
+```php
+new Signal(
+    key: 'coverage.delta',
+    type: 'numeric',
+    value: -2.5,
+    description: 'Coverage change from previous window (percentage points)'
+)
+```
+
+### 4. Consider Performance
+
+Providers run for each analysis window. Optimize:
+- Cache expensive computations
+- Use efficient queries
+- Consider async execution for external APIs
+
+<Aside type="tip">
+  Start simple. Add complexity only when needed. A basic provider with a few signals is more maintainable than a complex one with dozens.
+</Aside>

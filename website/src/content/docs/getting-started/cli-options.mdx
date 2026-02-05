@@ -1,0 +1,212 @@
+---
+title: CLI Options
+description: Complete reference for the codemetry:analyze command options
+---
+
+## Command Syntax
+
+```bash
+php artisan codemetry:analyze [options]
+```
+
+## Available Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--days` | 7 | Number of days to analyze |
+| `--since` | - | Start date (ISO 8601 format) |
+| `--until` | - | End date (ISO 8601 format) |
+| `--author` | - | Filter by author name (substring match) |
+| `--branch` | - | Filter by branch name |
+| `--format` | table | Output format: `table` or `json` |
+| `--ai` | 0 | Enable AI explanations: `0` or `1` |
+| `--baseline-days` | 56 | Days of history for baseline |
+| `--follow-up-horizon` | 3 | Days to scan for follow-up fixes |
+| `--repo` | base_path() | Path to Git repository |
+
+## Date Range Options
+
+### Using `--days`
+
+Analyze the last N days from today:
+
+```bash
+php artisan codemetry:analyze --days=14
+```
+
+### Using `--since` and `--until`
+
+Analyze a specific date range:
+
+```bash
+php artisan codemetry:analyze --since=2024-01-01 --until=2024-01-31
+```
+
+Dates must be in ISO 8601 format:
+- `2024-01-15`
+- `2024-01-15T10:00:00`
+- `2024-01-15T10:00:00+00:00`
+
+### Combining Options
+
+When both `--since`/`--until` and `--days` are provided:
+- If both `--since` and `--until` are set, `--days` is ignored
+- If only `--since` is set, analysis runs from that date to now
+- If only `--until` is set, analysis counts back `--days` from that date
+
+## Filter Options
+
+### `--author`
+
+Filter commits by author name:
+
+```bash
+php artisan codemetry:analyze --days=7 --author="Jane"
+```
+
+Uses substring matching, so "Jane" matches:
+- "Jane Doe"
+- "Jane Smith"
+- "janet@example.com" (if author name contains "jane")
+
+### `--branch`
+
+Analyze commits from a specific branch:
+
+```bash
+php artisan codemetry:analyze --days=7 --branch=develop
+php artisan codemetry:analyze --days=7 --branch=feature/auth
+```
+
+## Output Options
+
+### `--format`
+
+Choose output format:
+
+```bash
+# Human-readable table (default)
+php artisan codemetry:analyze --days=7 --format=table
+
+# Machine-readable JSON
+php artisan codemetry:analyze --days=7 --format=json
+```
+
+### JSON Output Structure
+
+```json
+{
+  "schema_version": "1.0",
+  "repo_id": "md5-hash-of-repo-path",
+  "analyzed_at": "2024-01-15T10:30:00+00:00",
+  "request_summary": {
+    "since": null,
+    "until": null,
+    "days": 7,
+    "author": null,
+    "branch": null,
+    "baseline_days": 56,
+    "follow_up_horizon_days": 3,
+    "ai_enabled": false,
+    "ai_engine": "openai"
+  },
+  "windows": [
+    {
+      "window_label": "2024-01-15",
+      "mood_label": "good",
+      "mood_score": 78,
+      "confidence": 0.80,
+      "reasons": [
+        {
+          "signal_key": "change.churn",
+          "direction": "positive",
+          "magnitude": 5.0,
+          "summary": "Low churn relative to baseline"
+        }
+      ],
+      "confounders": [],
+      "raw_signals": {
+        "signals": {
+          "change.churn": { "value": 150, "type": "numeric" },
+          "change.commits_count": { "value": 5, "type": "numeric" }
+        }
+      },
+      "normalized": {
+        "norm.change.churn.z": -0.5,
+        "norm.change.churn.pctl": 30.0
+      }
+    }
+  ]
+}
+```
+
+## AI Options
+
+### `--ai`
+
+Enable AI-powered explanations:
+
+```bash
+php artisan codemetry:analyze --days=7 --ai=1
+```
+
+Requires `CODEMETRY_AI_API_KEY` environment variable or config setting.
+
+If AI is enabled but no API key is configured, analysis continues normally with an `ai_unavailable` confounder added to results.
+
+## Advanced Options
+
+### `--baseline-days`
+
+Override the baseline period:
+
+```bash
+# Shorter baseline (faster reaction to changes)
+php artisan codemetry:analyze --days=7 --baseline-days=14
+
+# Longer baseline (more stable comparisons)
+php artisan codemetry:analyze --days=7 --baseline-days=90
+```
+
+### `--follow-up-horizon`
+
+Adjust the follow-up fix detection window:
+
+```bash
+# Extended horizon for slower release cycles
+php artisan codemetry:analyze --days=7 --follow-up-horizon=7
+```
+
+### `--repo`
+
+Analyze a repository at a different path:
+
+```bash
+php artisan codemetry:analyze --days=7 --repo=/var/www/other-project
+```
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | Failure (invalid repo, Git error, etc.) |
+
+## Examples
+
+```bash
+# Basic 7-day analysis
+php artisan codemetry:analyze
+
+# Last 30 days as JSON
+php artisan codemetry:analyze --days=30 --format=json
+
+# January 2024, filtered by author
+php artisan codemetry:analyze --since=2024-01-01 --until=2024-02-01 --author="Jane"
+
+# With AI explanations
+php artisan codemetry:analyze --days=7 --ai=1 --format=json
+
+# Analyze another repository
+php artisan codemetry:analyze --days=7 --repo=/path/to/repo
+```

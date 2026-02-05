@@ -1,0 +1,282 @@
+---
+title: Framework Adapters
+description: Integrate Codemetry with different frameworks
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Codemetry's core is framework-agnostic. The Laravel package is an adapter that provides Artisan commands and Laravel-style configuration. You can create adapters for other frameworks or use the core directly.
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────┐
+│            Your Application                  │
+├─────────────────────────────────────────────┤
+│  Laravel Adapter  │  Symfony Adapter  │ ... │
+├─────────────────────────────────────────────┤
+│              Codemetry Core                  │
+│  (Analyzer, Providers, Scorer, etc.)        │
+└─────────────────────────────────────────────┘
+```
+
+## Using Core Directly
+
+For non-Laravel projects, use the core package directly:
+
+```bash
+composer require codemetry/core
+```
+
+### Basic Usage
+
+```php
+<?php
+
+use Codemetry\Core\Analyzer;
+use Codemetry\Core\Domain\AnalysisRequest;
+use DateTimeImmutable;
+
+// Create analyzer with default configuration
+$analyzer = new Analyzer();
+
+// Build request
+$request = new AnalysisRequest(
+    since: new DateTimeImmutable('-7 days'),
+    until: new DateTimeImmutable('now'),
+    author: null,
+    branch: null,
+    timezone: new DateTimeZone('UTC'),
+    baselineDays: 56,
+    followUpHorizonDays: 3,
+    aiEnabled: false,
+    aiEngine: 'openai',
+    outputFormat: 'json'
+);
+
+// Run analysis
+$result = $analyzer->analyze('/path/to/repo', $request);
+
+// Access results
+foreach ($result->windows() as $window) {
+    echo $window->windowLabel() . ': ' . $window->moodLabel() . "\n";
+}
+
+// Get JSON output
+$json = $result->toJson();
+```
+
+### Configuration
+
+Without a framework, pass configuration directly:
+
+```php
+use Codemetry\Core\Analyzer;
+use Codemetry\Core\Config\Config;
+
+$config = new Config(
+    baselineDays: 56,
+    followUpHorizonDays: 3,
+    keywords: [
+        'fix_pattern' => '/\b(fix|bug|hotfix)\b/i',
+        'revert_pattern' => '/\b(revert)\b/i',
+        'wip_pattern' => '/\b(wip|tmp)\b/i',
+    ],
+    aiEnabled: false,
+    aiEngine: 'openai',
+    aiModel: null,
+    aiApiKey: null,
+);
+
+$analyzer = new Analyzer($config);
+```
+
+## Creating a Symfony Adapter
+
+Example structure for a Symfony bundle:
+
+```
+src/
+  CodemetryBundle.php
+  DependencyInjection/
+    CodemetryExtension.php
+    Configuration.php
+  Command/
+    AnalyzeCommand.php
+  Resources/
+    config/
+      services.yaml
+```
+
+### Service Registration
+
+```yaml
+# services.yaml
+services:
+  Codemetry\Core\Analyzer:
+    arguments:
+      $config: '@codemetry.config'
+
+  codemetry.config:
+    class: Codemetry\Core\Config\Config
+    factory: ['@App\Factory\CodemetryConfigFactory', 'create']
+
+  App\Command\CodemetryAnalyzeCommand:
+    arguments:
+      $analyzer: '@Codemetry\Core\Analyzer'
+    tags:
+      - { name: console.command }
+```
+
+### Console Command
+
+```php
+<?php
+
+namespace App\Command;
+
+use Codemetry\Core\Analyzer;
+use Codemetry\Core\Domain\AnalysisRequest;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use DateTimeImmutable;
+
+#[AsCommand(name: 'codemetry:analyze')]
+class CodemetryAnalyzeCommand extends Command
+{
+    public function __construct(
+        private Analyzer $analyzer
+    ) {
+        parent::__construct();
+    }
+
+    protected function configure(): void
+    {
+        $this
+            ->addOption('days', 'd', InputOption::VALUE_REQUIRED, 'Days to analyze', 7)
+            ->addOption('format', 'f', InputOption::VALUE_REQUIRED, 'Output format', 'table')
+            ->addOption('ai', null, InputOption::VALUE_REQUIRED, 'Enable AI', 0);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $days = (int) $input->getOption('days');
+        $format = $input->getOption('format');
+        $aiEnabled = (bool) $input->getOption('ai');
+
+        $request = new AnalysisRequest(
+            since: new DateTimeImmutable("-{$days} days"),
+            until: new DateTimeImmutable('now'),
+            aiEnabled: $aiEnabled,
+            outputFormat: $format,
+            // ... other options
+        );
+
+        $result = $this->analyzer->analyze(getcwd(), $request);
+
+        if ($format === 'json') {
+            $output->writeln($result->toJson());
+        } else {
+            $this->renderTable($output, $result);
+        }
+
+        return Command::SUCCESS;
+    }
+}
+```
+
+## Creating Other Adapters
+
+Key responsibilities of an adapter:
+
+### 1. Configuration Binding
+
+Map framework config to Codemetry's `Config` object:
+
+```php
+// Read from framework config
+$frameworkConfig = $this->getConfig('codemetry');
+
+// Create Codemetry config
+$config = new Config(
+    baselineDays: $frameworkConfig['baseline_days'] ?? 56,
+    // ...
+);
+```
+
+### 2. Command/CLI Integration
+
+Provide framework-native CLI commands:
+- Parse arguments and options
+- Build `AnalysisRequest`
+- Format output appropriately
+
+### 3. Service Registration
+
+Register Codemetry services with the framework's container:
+- `Analyzer` as singleton
+- Custom providers
+- AI engines if needed
+
+### 4. Output Formatting
+
+Adapt output to framework conventions:
+- Table rendering
+- JSON responses
+- Progress indicators
+
+## Adapter Best Practices
+
+### Keep It Thin
+
+The adapter should only:
+- Map configuration
+- Provide CLI interface
+- Register services
+
+Business logic stays in core.
+
+### Respect Framework Conventions
+
+- Use native configuration systems
+- Follow framework's CLI patterns
+- Integrate with framework's logging
+
+### Handle Dependencies
+
+Don't require core dependencies in the adapter:
+```php
+// Good: Adapter requires only what it needs
+// composer.json
+{
+    "require": {
+        "codemetry/core": "^1.0",
+        "symfony/console": "^6.0|^7.0"
+    }
+}
+```
+
+### Test Independently
+
+Test adapter functionality separately from core:
+- Configuration parsing
+- Command argument handling
+- Output formatting
+
+<Aside type="tip">
+  When building an adapter, start with the CLI command. Once that works, add configuration and service registration. Keep the initial version simple and expand based on user feedback.
+</Aside>
+
+## Contributing Adapters
+
+If you build an adapter for a popular framework:
+
+1. Consider contributing it to the Codemetry organization
+2. Follow the existing Laravel adapter as a pattern
+3. Include comprehensive tests
+4. Document framework-specific features
+
+Community adapters help make Codemetry accessible to more developers.

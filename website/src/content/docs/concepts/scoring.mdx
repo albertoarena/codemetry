@@ -1,0 +1,166 @@
+---
+title: Scoring
+description: How Codemetry computes mood scores and labels from normalized signals
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Codemetry uses a deterministic heuristic scoring algorithm to convert normalized signals into a single score (0-100) and label (bad/medium/good).
+
+## The Algorithm
+
+### Starting Point
+
+Every day starts with a base score of **70** (in the "medium" range).
+
+### Penalties
+
+The scorer applies penalties based on percentile thresholds:
+
+| Condition | Penalty | Reasoning |
+|-----------|---------|-----------|
+| Churn at p95+ | -20 | Extreme activity, high risk |
+| Churn at p90-p95 | -12 | Elevated activity |
+| Scatter at p90+ | -10 | Highly dispersed changes |
+| Fix density at p95+ | -25 | Many follow-up fixes needed |
+| Fix density at p90-p95 | -15 | Elevated follow-up fixes |
+| Any revert commits | -15 | Something went wrong |
+| WIP ratio ≥ 0.3 | -8 | High proportion of incomplete work |
+
+### Rewards
+
+The scorer applies rewards for positive patterns:
+
+| Condition | Reward | Reasoning |
+|-----------|--------|-----------|
+| Churn ≤p25 AND fix density ≤p25 | +5 | Low activity with stable quality |
+
+### Clamping
+
+The final score is clamped to the range **0-100**.
+
+### Label Mapping
+
+| Score Range | Label |
+|-------------|-------|
+| 75-100 | good |
+| 45-74 | medium |
+| 0-44 | bad |
+
+## Worked Example
+
+Let's walk through a scoring calculation:
+
+**Day's normalized signals:**
+- Churn: 92nd percentile
+- Scatter: 75th percentile
+- Fix density: 96th percentile
+- Reverts: 1
+- WIP ratio: 0.1
+
+**Calculation:**
+```
+Starting score: 70
+
+Churn at p90-95:        -12
+Scatter below p90:        0
+Fix density at p95+:    -25
+Revert detected:        -15
+WIP ratio < 0.3:          0
+                        ────
+Subtotal:                18
+
+Clamp to 0-100:          18 ✓
+Label (0-44 = bad):     bad
+```
+
+Result: **Score 18, Label "bad"**
+
+## Why This Algorithm?
+
+### Deterministic
+
+Same inputs always produce same outputs. No randomness, no machine learning variance. You can verify and predict results.
+
+### Percentile-Based
+
+Using percentiles instead of absolute values means:
+- "High" churn is relative to your repo
+- Different projects have different norms
+- Fair comparison across repositories
+
+### Additive Penalties
+
+Multiple problems compound:
+- High churn alone = medium score
+- High churn + reverts = low score
+- High churn + reverts + high fix density = very low score
+
+This reflects reality: multiple warning signs are more concerning than isolated ones.
+
+### Conservative Rewards
+
+The algorithm is intentionally more generous with penalties than rewards:
+- Easy to lose points (many penalty conditions)
+- Hard to gain points (one small reward)
+
+This makes "good" scores meaningful—they represent genuinely stable periods.
+
+<Aside type="note">
+  The scoring algorithm is designed to surface potential issues. A "bad" score is a signal to investigate, not a judgment on developer quality.
+</Aside>
+
+## Interpreting Scores
+
+### Score Ranges
+
+| Range | Interpretation |
+|-------|----------------|
+| 80-100 | Stable, low-risk period |
+| 65-79 | Normal development activity |
+| 50-64 | Some elevated signals, worth monitoring |
+| 35-49 | Multiple warning signs, consider review |
+| 0-34 | Significant strain indicators |
+
+### Context Matters
+
+Always consider:
+- **Confounders**: `large_refactor_suspected` changes interpretation
+- **Confidence**: Low confidence = take score with a grain of salt
+- **Reasons**: The "why" behind the score
+- **Patterns**: One bad day happens; three in a row is a pattern
+
+## Reasons
+
+The scorer generates human-readable reasons for the top 6 contributors to the score:
+
+```json
+"reasons": [
+  {
+    "signal_key": "change.churn",
+    "direction": "negative",
+    "magnitude": 20.0,
+    "summary": "Churn at p95+ percentile"
+  },
+  {
+    "signal_key": "followup.fix_density",
+    "direction": "negative",
+    "magnitude": 15.0,
+    "summary": "High follow-up fix density"
+  }
+]
+```
+
+Reasons are sorted by magnitude (impact on score), so the first reason is the biggest contributor.
+
+## Customization
+
+The scoring algorithm is not currently configurable. If you need different thresholds or weights, you would need to:
+1. Create a custom scorer class
+2. Inject it into the Analyzer
+
+This is intentionally limited in V1 to maintain consistency. Custom scoring may be exposed in future versions.
+
+<Aside type="tip">
+  Before adjusting scoring, ask: am I trying to make my scores look better, or am I trying to surface real issues? The defaults are designed for honest assessment.
+</Aside>

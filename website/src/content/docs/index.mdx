@@ -1,0 +1,98 @@
+---
+title: What is Codemetry?
+description: Git-powered code metrics for daily quality and strain analysis
+template: splash
+hero:
+  tagline: Transform Git history into actionable quality insights. Codemetry analyzes your repository and produces a metrics-based "mood proxy" for each day, helping you understand code quality trends without guessing.
+  actions:
+    - text: Get Started
+      link: /codemetry/getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: How it Works
+      link: /codemetry/concepts/signals/
+      variant: secondary
+    - text: View on GitHub
+      link: https://github.com/albertoarena/codemetry
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What Codemetry Does
+
+Codemetry analyzes your Git repository and produces a **metrics-based quality proxy** (bad/medium/good) for each day or time window. It measures signals like code churn, file scatter, follow-up fixes, and commit patterns to estimate development strain and quality risk.
+
+<CardGrid stagger>
+  <Card title="Metrics-Based Signals" icon="chart">
+    Measures churn, scatter, follow-up fixes, and commit patterns from your Git history. No guesswork—just data.
+  </Card>
+  <Card title="Baseline Comparison" icon="bars">
+    Compares each day against your repository's historical baseline, so "high churn" means high *for your project*.
+  </Card>
+  <Card title="Follow-Up Fix Detection" icon="warning">
+    Detects when files get patched shortly after changes—a strong indicator of quality issues or rushed work.
+  </Card>
+  <Card title="Optional AI Explanations" icon="robot">
+    Enable AI-powered summaries that explain your metrics in plain English. Metrics-only payload—no code is ever sent.
+  </Card>
+  <Card title="Laravel-First" icon="puzzle">
+    Ships with a Laravel adapter and Artisan command. Extensible architecture for future frameworks.
+  </Card>
+  <Card title="Privacy-Focused" icon="shield">
+    Runs locally. No code uploads. AI is opt-in and receives only aggregated metrics—never raw code or diffs.
+  </Card>
+</CardGrid>
+
+---
+
+## Important: Not Emotion Detection
+
+Codemetry produces a **"mood proxy"**—a quality/strain indicator based on measurable signals. It does **not** infer developer emotions, stress levels, or psychological states.
+
+The terms "good", "medium", and "bad" refer to code quality risk indicators:
+- **Good**: Normal activity, low follow-up fix density, stable patterns
+- **Medium**: Elevated signals worth monitoring
+- **Bad**: High strain indicators—significant churn, many follow-up fixes, scattered changes
+
+Use these signals to identify periods that may need review, not to evaluate individual developers.
+
+---
+
+## Quick Example
+
+```bash
+# Analyze the last 7 days
+php artisan codemetry:analyze --days=7
+
+# Output as JSON
+php artisan codemetry:analyze --days=7 --format=json
+
+# Filter by author
+php artisan codemetry:analyze --days=7 --author="Jane"
+
+# Enable AI explanations (requires API key)
+php artisan codemetry:analyze --days=7 --ai=1
+```
+
+Sample output:
+
+| Date       | Mood   | Score | Confidence | Top Reasons                          |
+|------------|--------|-------|------------|--------------------------------------|
+| 2024-01-15 | good   | 78    | 0.80       | Low churn; stable patterns           |
+| 2024-01-14 | medium | 58    | 0.70       | Elevated fix density; scattered files|
+| 2024-01-13 | bad    | 35    | 0.75       | High churn p95; multiple reverts     |
+
+---
+
+## Next Steps
+
+<CardGrid>
+  <Card title="Installation" icon="rocket">
+    [Install Codemetry](/codemetry/getting-started/installation/) in your Laravel project in under a minute.
+  </Card>
+  <Card title="How it Works" icon="book">
+    [Learn about signals](/codemetry/concepts/signals/), baseline normalization, and the scoring algorithm.
+  </Card>
+</CardGrid>

@@ -1,0 +1,185 @@
+---
+title: Basic Usage
+description: Learn how to run Codemetry analysis and interpret results
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Running an Analysis
+
+The primary command is `codemetry:analyze`:
+
+```bash
+php artisan codemetry:analyze --days=7
+```
+
+This analyzes the last 7 days and outputs a table:
+
+| Date       | Mood   | Score | Confidence | Top Reasons                          |
+|------------|--------|-------|------------|--------------------------------------|
+| 2024-01-15 | good   | 78    | 0.80       | Low churn; stable patterns           |
+| 2024-01-14 | medium | 58    | 0.70       | Elevated fix density                 |
+| 2024-01-13 | bad    | 35    | 0.75       | High churn p95; multiple reverts     |
+
+## Understanding the Output
+
+### Mood Labels
+
+| Label    | Score Range | Meaning                                    |
+|----------|-------------|--------------------------------------------|
+| **good** | 75-100      | Normal activity, low risk indicators       |
+| **medium** | 45-74     | Elevated signals, worth monitoring         |
+| **bad**  | 0-44        | High strain indicators, may need attention |
+
+### Score
+
+A number from 0-100 representing overall quality risk:
+- Starts at 70 (neutral baseline)
+- Penalties applied for high churn, scatter, fix density, reverts
+- Rewards applied for low activity with stable patterns
+- Clamped to 0-100
+
+### Confidence
+
+A number from 0.0-1.0 indicating how reliable the score is:
+- Higher with more commits (more data)
+- Higher when follow-up analysis ran successfully
+- Lower with very few commits (limited data)
+- Lower if signal providers were skipped
+
+### Top Reasons
+
+Human-readable explanations of the main factors affecting the score. Examples:
+- "High churn at p95+ percentile"
+- "Elevated follow-up fix density"
+- "Multiple revert commits detected"
+- "Scattered changes across many directories"
+
+## Output Formats
+
+### Table (default)
+
+```bash
+php artisan codemetry:analyze --days=7
+```
+
+Best for quick visual inspection in the terminal.
+
+### JSON
+
+```bash
+php artisan codemetry:analyze --days=7 --format=json
+```
+
+Returns structured JSON with full details:
+
+```json
+{
+  "schema_version": "1.0",
+  "repo_id": "a1b2c3d4...",
+  "analyzed_at": "2024-01-15T10:30:00+00:00",
+  "request_summary": {
+    "days": 7,
+    "baseline_days": 56
+  },
+  "windows": [
+    {
+      "window_label": "2024-01-15",
+      "mood_label": "good",
+      "mood_score": 78,
+      "confidence": 0.80,
+      "reasons": [...],
+      "confounders": [],
+      "raw_signals": {...},
+      "normalized": {...}
+    }
+  ]
+}
+```
+
+<Aside type="tip">
+  Use `--format=json` for CI/CD pipelines, custom dashboards, or further processing.
+</Aside>
+
+## Filtering Results
+
+### By Date Range
+
+```bash
+# Specific date range
+php artisan codemetry:analyze --since=2024-01-01 --until=2024-01-15
+
+# Last N days
+php artisan codemetry:analyze --days=30
+```
+
+### By Author
+
+Analyze commits from a specific author:
+
+```bash
+php artisan codemetry:analyze --days=7 --author="Jane Doe"
+```
+
+The author filter uses substring matching on the Git author name.
+
+### By Branch
+
+Analyze a specific branch:
+
+```bash
+php artisan codemetry:analyze --days=7 --branch=feature/new-auth
+```
+
+## Customizing Analysis
+
+### Override Baseline Days
+
+```bash
+php artisan codemetry:analyze --days=7 --baseline-days=30
+```
+
+A shorter baseline reacts faster to recent changes but may be less stable.
+
+### Override Follow-up Horizon
+
+```bash
+php artisan codemetry:analyze --days=7 --follow-up-horizon=5
+```
+
+Extend the window for detecting follow-up fix commits.
+
+### Analyze a Different Repository
+
+```bash
+php artisan codemetry:analyze --days=7 --repo=/path/to/other/repo
+```
+
+<Aside type="caution">
+  The target path must be a valid Git repository with commit history.
+</Aside>
+
+## Interpreting Results
+
+### A "bad" day isn't necessarily bad
+
+High churn during a major refactor is expected. Look for:
+- `large_refactor_suspected` confounder
+- Low follow-up fix density despite high churn
+- Commit messages indicating intentional restructuring
+
+### Watch for patterns
+
+Single bad days happen. Consecutive bad days may indicate:
+- Rushed deadline
+- Technical debt accumulation
+- Understaffed period
+
+### Use confidence as a guide
+
+Low confidence (< 0.5) means limited data:
+- Weekend with 1-2 commits
+- New repository with short history
+- Filtered view with few matching commits
+
+Take low-confidence scores with appropriate skepticism.

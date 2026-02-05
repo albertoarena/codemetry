@@ -1,0 +1,196 @@
+---
+title: Privacy & Security
+description: How Codemetry handles your data
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Codemetry is designed with privacy as a core principle. Your code stays on your machine.
+
+## Core Privacy Principles
+
+### 1. Local-First Analysis
+
+All analysis runs locally on your machine:
+- Git commands execute in your repository
+- Signal extraction happens locally
+- Scoring and normalization are computed locally
+- Results stay on your system
+
+**No code, diffs, or file contents are ever sent anywhere.**
+
+### 2. Opt-In AI Only
+
+AI features are disabled by default. When you enable AI:
+- Only aggregated metrics are sent (numbers, not code)
+- You choose the AI provider
+- You control which analyses use AI
+
+### 3. No Telemetry
+
+Codemetry does not:
+- Phone home
+- Collect usage statistics
+- Track analysis runs
+- Send anonymous data
+
+What happens on your machine stays on your machine.
+
+## What Data Goes Where
+
+### Local Only (Always)
+
+| Data | Storage |
+|------|---------|
+| Source code | Never leaves your repo |
+| Git history | Never leaves your repo |
+| File contents | Never read by Codemetry |
+| Diffs | Never read by Codemetry |
+| Baseline cache | `.git/codemetry/` or temp dir |
+| Analysis results | Your terminal/files |
+
+### Sent to AI Provider (Opt-In Only)
+
+When AI is enabled, these metrics are sent:
+
+| Data | Example | Purpose |
+|------|---------|---------|
+| Aggregated metrics | `churn: 450, scatter: 8` | Context for explanation |
+| Normalized values | `churn_percentile: 95` | Show relative significance |
+| Score and label | `score: 35, label: bad` | What to explain |
+| Confounders | `large_refactor_suspected` | Additional context |
+| Reasons | `High churn at p95` | What contributed |
+
+**Never sent:**
+- Actual code
+- Commit messages (full text)
+- File paths (beyond counts)
+- Author names/emails
+- Repository name/URL
+
+<Aside type="note">
+  AI receives only what's needed to explain the numbers. It cannot see your code, cannot identify your project, and cannot identify individuals.
+</Aside>
+
+## AI Provider Considerations
+
+When using AI, data is sent to your chosen provider:
+
+| Provider | Data Handling |
+|----------|---------------|
+| OpenAI | [OpenAI Privacy Policy](https://openai.com/policies/privacy-policy) |
+| Anthropic | [Anthropic Privacy Policy](https://www.anthropic.com/privacy) |
+| DeepSeek | [DeepSeek Terms](https://platform.deepseek.com/) |
+| Google | [Google AI Terms](https://ai.google.dev/terms) |
+
+### Key Points
+
+- API requests may be logged by providers
+- Some providers may use data for model training (check their policies)
+- Enterprise tiers often offer data retention controls
+- Consider using providers with strong data protection commitments
+
+### Mitigation
+
+Since Codemetry only sends metrics (not code), even if logged:
+- Metrics alone don't reveal proprietary information
+- Numbers can't be reverse-engineered to code
+- No PII is included in the data
+
+## Security Considerations
+
+### API Key Storage
+
+Store API keys securely:
+
+```bash
+# Good: Environment variables
+export OPENAI_API_KEY=sk-...
+
+# Good: Laravel .env (not committed)
+OPENAI_API_KEY=sk-...
+
+# Bad: Hardcoded in config files
+'api_key' => 'sk-...',  # Don't do this
+```
+
+### Repository Access
+
+Codemetry needs:
+- Read access to `.git/` directory
+- Write access to `.git/codemetry/` for caching
+- Execute permission for git commands
+
+It does not need:
+- Network access (except for AI, which is opt-in)
+- Write access to your source files
+- Access to other repositories
+
+### CI/CD Security
+
+When running in CI:
+- Use secret management for API keys
+- Consider whether AI summaries are needed in CI
+- Cache files don't contain sensitive data
+
+## Compliance Notes
+
+### GDPR
+
+- No personal data collection by Codemetry itself
+- Git metadata (author names/emails) stays local
+- AI providers may have GDPR obligations if you enable AI
+
+### SOC 2 / HIPAA
+
+- Local-only analysis supports compliance requirements
+- AI integration requires evaluating provider compliance
+- Consider disabling AI for sensitive repositories
+
+### Internal Policies
+
+If your organization has code security policies:
+- Codemetry's local-only design typically satisfies "code doesn't leave the network"
+- AI opt-in allows per-project decisions
+- Audit the metrics sent to AI if needed
+
+<Aside type="tip">
+  For maximum privacy, simply don't enable AI. You get full analysis functionality with zero external data transmission.
+</Aside>
+
+## Verification
+
+### Audit the Code
+
+Codemetry is open source. You can verify:
+- What data is collected: Check signal providers
+- What's sent to AI: Check AI engine implementations
+- Network calls: Search for HTTP client usage
+
+### Monitor Network
+
+Run analysis while monitoring network:
+```bash
+# Without AI: No network calls
+php artisan codemetry:analyze --days=7
+
+# With AI: Only calls to your chosen provider
+php artisan codemetry:analyze --days=7 --ai=1
+```
+
+### Review AI Payloads
+
+Enable logging to see exactly what's sent:
+```php
+// In a custom AI engine wrapper
+Log::debug('AI payload', $payload);
+```
+
+## Questions?
+
+If you have privacy concerns not addressed here:
+- Review the source code
+- Open an issue on GitHub
+- Contact the maintainers
+
+We take privacy seriously and welcome scrutiny of our approach.

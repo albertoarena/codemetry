@@ -1,0 +1,214 @@
+---
+title: Caching
+description: How Codemetry caches baseline data for performance
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Computing baselines requires analyzing many days of commit history. Codemetry caches this data to avoid repeated expensive calculations.
+
+## Cache Location
+
+Codemetry stores baseline cache in one of two locations:
+
+### Primary Location (Preferred)
+
+```
+<repository>/.git/codemetry/cache-baseline.json
+```
+
+This keeps the cache close to the repository and automatically excluded from version control (inside `.git/`).
+
+### Fallback Location
+
+If the primary location is not writable:
+
+```
+<system-temp>/codemetry/<repo-id>/cache-baseline.json
+```
+
+On Linux/macOS: `/tmp/codemetry/<repo-id>/cache-baseline.json`
+On Windows: `C:\Users\<user>\AppData\Local\Temp\codemetry\<repo-id>\cache-baseline.json`
+
+The `<repo-id>` is an MD5 hash of the repository's absolute path.
+
+## Cache Contents
+
+The cache stores baseline statistics for each signal:
+
+```json
+{
+  "config_hash": "a1b2c3d4...",
+  "computed_at": "2024-01-15T10:30:00+00:00",
+  "baseline_days": 56,
+  "signals": {
+    "change.churn": {
+      "mean": 245.3,
+      "stddev": 182.1,
+      "sorted_values": [12, 45, 67, ...]
+    },
+    "change.scatter": {
+      "mean": 4.2,
+      "stddev": 2.8,
+      "sorted_values": [1, 2, 3, ...]
+    }
+  }
+}
+```
+
+## Automatic Invalidation
+
+The cache is automatically invalidated when:
+
+| Change | Effect |
+|--------|--------|
+| `baseline_days` changes | Full recompute |
+| Signal providers change | Full recompute |
+| Configuration hash changes | Full recompute |
+
+You don't need to manually clear the cache when changing settings—Codemetry detects the change and rebuilds.
+
+## Manual Cache Clearing
+
+If you need to force a fresh baseline calculation:
+
+### Clear Specific Repository
+
+```bash
+# Remove primary cache
+rm -f .git/codemetry/cache-baseline.json
+
+# Or remove fallback cache
+rm -rf /tmp/codemetry/$(echo -n "$(pwd)" | md5sum | cut -d' ' -f1)
+```
+
+### Clear All Caches
+
+```bash
+# Remove all fallback caches
+rm -rf /tmp/codemetry/
+
+# Primary caches must be removed per-repository
+find ~/projects -path '*/.git/codemetry/cache-baseline.json' -delete
+```
+
+<Aside type="tip">
+  Manual cache clearing is rarely needed. The most common reason is after a major repository change (rebasing history, importing new commits).
+</Aside>
+
+## Cache Behavior Scenarios
+
+### First Run
+
+On first analysis, Codemetry:
+1. Computes baseline from scratch (analyzes `baseline_days` of history)
+2. Writes cache to primary location
+3. Reports analysis results
+
+This first run is slower due to baseline computation.
+
+### Subsequent Runs
+
+On later analyses:
+1. Reads cached baseline
+2. Validates config hash matches
+3. Uses cached statistics for normalization
+4. Reports analysis results
+
+Subsequent runs are faster.
+
+### After Configuration Change
+
+If you change `baseline_days` or other relevant settings:
+1. Reads cached baseline
+2. Detects config hash mismatch
+3. Discards cache, recomputes baseline
+4. Writes new cache
+5. Reports analysis results
+
+## Performance Impact
+
+| Scenario | First Run | Cached Run |
+|----------|-----------|------------|
+| Small repo (1K commits) | ~2-5 seconds | Under 1 second |
+| Medium repo (10K commits) | ~10-30 seconds | Under 1 second |
+| Large repo (100K+ commits) | ~1-5 minutes | Under 1 second |
+
+Caching provides significant speedup for repeated analyses.
+
+## Disabling Cache
+
+Caching cannot be disabled in V1. If you need fresh baselines every run:
+
+```bash
+# Add to your analysis script
+rm -f .git/codemetry/cache-baseline.json
+php artisan codemetry:analyze --days=7
+```
+
+<Aside type="note">
+  Disabling cache is not recommended for normal use. The baseline should be stable across runs for consistent scoring.
+</Aside>
+
+## CI/CD Considerations
+
+In CI/CD environments:
+
+### Option 1: Fresh Cache Each Run
+
+If your CI environment doesn't persist data between runs:
+- Cache is computed fresh each time
+- Consider using a shorter `baseline_days` to reduce compute time
+- Accept the performance cost
+
+### Option 2: Cache in Artifacts
+
+Store the cache directory as a build artifact:
+
+```yaml
+# GitHub Actions example
+- name: Cache Codemetry baseline
+  uses: actions/cache@v3
+  with:
+    path: .git/codemetry
+    key: codemetry-baseline-${{ hashFiles('composer.json') }}
+```
+
+### Option 3: Shared Cache Volume
+
+In persistent CI environments (self-hosted runners):
+- Cache persists between runs
+- Benefits from fast subsequent analyses
+
+<Aside type="caution">
+  If your CI clones fresh repos each time, the cache path changes (different absolute path = different repo-id in fallback location). Use the primary `.git/codemetry/` location or configure a stable cache path.
+</Aside>
+
+## Troubleshooting
+
+### Cache Not Being Used
+
+**Symptoms:** Every run takes the same (long) time
+
+**Causes:**
+- Cache location not writable
+- Config changes between runs
+- Different repository paths (CI environments)
+
+**Solutions:**
+- Check write permissions on `.git/codemetry/`
+- Verify configuration is consistent
+- Use cache artifacts in CI
+
+### Stale Cache
+
+**Symptoms:** Scores seem wrong after major repository changes
+
+**Causes:**
+- History rewritten (rebase, force push)
+- Many new commits imported
+- Cache from before significant changes
+
+**Solutions:**
+- Clear cache manually: `rm -f .git/codemetry/cache-baseline.json`
+- Run fresh analysis

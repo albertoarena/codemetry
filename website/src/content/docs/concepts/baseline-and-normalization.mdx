@@ -1,0 +1,161 @@
+---
+title: Baseline & Normalization
+description: How Codemetry compares each day to your repository's historical patterns
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Raw signal values (like "500 lines of churn") aren't meaningful on their own. Is 500 lines a lot? It depends on your repository's normal activity level. Codemetry's baseline and normalization system solves this.
+
+## Why Baseline Matters
+
+Consider two repositories:
+- **Repo A**: Typical day has 50-100 lines of churn
+- **Repo B**: Typical day has 500-1000 lines of churn
+
+A day with 500 lines of churn is:
+- **Extreme** for Repo A (10x normal)
+- **Average** for Repo B (typical activity)
+
+Without baseline comparison, Codemetry couldn't distinguish between normal and abnormal activity for *your specific project*.
+
+## How Baseline Works
+
+### Building the Baseline
+
+Codemetry analyzes the previous N days (default: 56) to build a statistical baseline:
+
+```
+Baseline Period (56 days)          Analysis Window
+─────────────────────────────────  ───────────────
+[day -56] ... [day -2] [day -1]    [target day]
+         ↓
+   Collect signals for each day
+         ↓
+   Compute distributions
+         ↓
+   Store mean, stddev, percentiles
+```
+
+For each signal, the baseline stores:
+- **Mean**: Average value over the baseline period
+- **Standard deviation**: Spread of values
+- **Sorted values**: For percentile calculations
+
+### Normalization
+
+Each day's signals are normalized against the baseline:
+
+**Z-score** — How many standard deviations from the mean:
+```
+z = (value - mean) / stddev
+```
+
+**Percentile** — Where this value ranks in the baseline distribution:
+```
+pctl = (count of baseline values <= current value) / total * 100
+```
+
+### Example
+
+If your baseline for `change.churn` shows:
+- Mean: 200 lines
+- Standard deviation: 100 lines
+
+A day with 450 lines of churn would have:
+- Z-score: (450 - 200) / 100 = 2.5 (2.5 standard deviations above normal)
+- Percentile: ~95th (higher than 95% of baseline days)
+
+## Baseline Configuration
+
+### `baseline_days`
+
+Controls how much history is used for comparison:
+
+```php
+// config/codemetry.php
+'baseline_days' => 56,  // Default: 8 weeks
+```
+
+| Setting | Behavior |
+|---------|----------|
+| Shorter (14-28) | More reactive to recent changes, less stable |
+| Default (56) | Good balance of stability and responsiveness |
+| Longer (90+) | Very stable, may not reflect recent patterns |
+
+<Aside type="tip">
+  Start with the default. Adjust if your project has significant seasonal patterns or recent major changes.
+</Aside>
+
+### CLI Override
+
+```bash
+php artisan codemetry:analyze --days=7 --baseline-days=30
+```
+
+## Baseline Caching
+
+Computing baselines is expensive (analyzes 56+ days of commits). Codemetry caches results:
+
+**Cache location**:
+1. Primary: `<repo>/.git/codemetry/cache-baseline.json`
+2. Fallback: `sys_get_temp_dir()/codemetry/<repo-id>/cache-baseline.json`
+
+**Cache invalidation**:
+The cache is automatically invalidated when:
+- `baseline_days` changes
+- Provider list changes
+- Configuration hash changes
+
+You don't need to manually clear the cache.
+
+## Normalized Signal Names
+
+In JSON output, normalized values appear with prefixes:
+
+| Raw Signal | Normalized Keys |
+|------------|-----------------|
+| `change.churn` | `norm.change.churn.z`, `norm.change.churn.pctl` |
+| `change.scatter` | `norm.change.scatter.z`, `norm.change.scatter.pctl` |
+| `followup.fix_density` | `norm.followup.fix_density.z`, `norm.followup.fix_density.pctl` |
+
+## How Scoring Uses Normalization
+
+The [scoring algorithm](/codemetry/concepts/scoring/) uses percentiles to determine penalties:
+
+| Condition | Effect |
+|-----------|--------|
+| Churn at p95+ | -20 points |
+| Churn at p90-95 | -12 points |
+| Scatter at p90+ | -10 points |
+| Fix density at p95+ | -25 points |
+| Churn ≤p25 AND fix density ≤p25 | +5 points (reward) |
+
+This means "high" and "low" are always relative to your repository's norms.
+
+## Edge Cases
+
+### New Repositories
+
+With limited history, baseline may be sparse:
+- Fewer than baseline_days of commits = smaller sample
+- Distributions may be less stable
+- Confidence scores reflect this uncertainty
+
+### Inactive Periods
+
+Days with zero commits are included in baseline:
+- Weekends, holidays affect the distribution
+- A Monday with "normal" activity may score differently than expected
+- Consider this when interpreting weekend vs. weekday scores
+
+### Major Project Changes
+
+After significant changes (new team, major pivot):
+- Old baseline may not reflect new patterns
+- Consider temporarily shortening `baseline_days`
+- Or clear cache and let new patterns emerge
+
+<Aside type="caution">
+  Don't set `baseline_days` too low. Less than 14 days can produce unstable, noisy results.
+</Aside>

@@ -1,0 +1,55 @@
+---
+title: Quickstart
+description: Get Codemetry running in your Laravel project in under 2 minutes
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+This guide gets you from zero to your first analysis in under 2 minutes.
+
+<Steps>
+
+1. **Install the package**
+
+   ```bash
+   composer require codemetry/laravel
+   ```
+
+2. **Run your first analysis**
+
+   ```bash
+   php artisan codemetry:analyze --days=7
+   ```
+
+3. **View the results**
+
+   You'll see a table showing the mood proxy for each day:
+
+   | Date       | Mood   | Score | Confidence | Top Reasons                |
+   |------------|--------|-------|------------|----------------------------|
+   | 2024-01-15 | good   | 78    | 0.80       | Low churn; stable patterns |
+   | 2024-01-14 | medium | 55    | 0.70       | Elevated scatter           |
+
+</Steps>
+
+That's it! Codemetry analyzed your Git history and produced quality metrics for the last 7 days.
+
+## What Just Happened?
+
+Codemetry:
+
+1. Read your Git log for the specified time range
+2. Collected signals: churn, file scatter, follow-up fixes, commit patterns
+3. Compared signals against a 56-day baseline (your repo's normal patterns)
+4. Computed a score (0-100) and label (bad/medium/good) for each day
+5. Identified the top reasons contributing to each day's score
+
+## Next Steps
+
+- [Configure the analysis](/codemetry/configuration/index/) (baseline days, keywords, etc.)
+- [Understand the signals](/codemetry/concepts/signals/) being measured
+- [Enable AI explanations](/codemetry/ai-engines/index/) for human-readable summaries
+
+<Aside type="tip">
+  Use `--format=json` to get machine-readable output for CI/CD integration or dashboards.
+</Aside>
