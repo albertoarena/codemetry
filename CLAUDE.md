@@ -69,7 +69,7 @@ php artisan codemetry:analyze --days=7 --ai=1             # With AI (requires AP
 
 ## Implementation Guidelines
 
-- Implement core first, following the order in CODEMETRY.md section 15
+- Implement core first, following the order in docs/claude/CODEMETRY.md section 15
 - Signal providers that fail (missing tools, command errors) must not break the pipeline — add `provider_skipped:<id>` confounder instead
 - AI engines receive metrics only, never raw code or diffs
 - When `--ai=1` is used without API keys, fall back gracefully and add `ai_unavailable` confounder
@@ -87,3 +87,39 @@ php artisan codemetry:analyze --days=7 --ai=1             # With AI (requires AP
 - No Claude attribution - NEVER include "Generated with Claude Code" or "Co-Authored-By: Claude"
 - Keep first line under 50 characters
 - Use heredoc for multi-line commit messages
+
+## Claude Workflow Rules — Codemetry
+
+You must implement Codemetry using the task plans below.  
+**Do NOT start a new plan until the previous plan is fully completed and approved.**
+
+### How to execute each plan
+For each plan:
+1. Create/update a file: `docs/claude/PLAN_XX.md`
+   - Include: Goal, Scope, File changes, Commands to run, Acceptance checklist
+2. Implement the plan fully.
+3. Run tests relevant to the plan and report results (commands + summary).
+4. Provide a concise “Review Notes” section:
+   - What changed
+   - Risks/assumptions
+   - Follow-ups (if any)
+5. Stop and wait for approval before moving to the next plan.
+
+### Plan list (must follow in order)
+- PLAN_01: Repo & package scaffolding (core + laravel)
+- PLAN_02: Core DTOs + JSON schema output (no git yet)
+- PLAN_03: GitRepoReader + window snapshot builder
+- PLAN_04: Signal system + required providers
+- PLAN_05: FollowUpFixProvider (horizon scanning)
+- PLAN_06: Baseline builder + normalizer + caching
+- PLAN_07: Heuristic scoring + reasons/confounders
+- PLAN_08: Core Analyzer orchestration (end-to-end)
+- PLAN_09: Laravel adapter: ServiceProvider + Artisan command
+- PLAN_10: AI engine abstraction + top engines (minimal, opt-in)
+
+### Definition of “approved”
+A plan is approved only when:
+- all acceptance criteria are satisfied
+- tests pass (or explicitly marked skipped with reason)
+- code style is consistent and no debug artifacts remain
+- the plan file `docs/claude/PLAN_XX.md` is updated with final status
