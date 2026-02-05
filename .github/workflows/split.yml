@@ -1,0 +1,47 @@
+name: Split Monorepo
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SPLIT_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Split and push core
+        run: |
+          git subtree split -P packages/core -b core-split
+          git push --force https://${{ secrets.SPLIT_TOKEN }}@github.com/albertoarena/codemetry-core.git core-split:main
+
+      - name: Split and push laravel
+        run: |
+          git subtree split -P packages/laravel -b laravel-split
+          git push --force https://${{ secrets.SPLIT_TOKEN }}@github.com/albertoarena/codemetry-laravel.git laravel-split:main
+
+      - name: Push tags to split repos
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+
+          # Tag core
+          git checkout core-split
+          git tag -f $TAG
+          git push --force https://${{ secrets.SPLIT_TOKEN }}@github.com/albertoarena/codemetry-core.git $TAG
+
+          # Tag laravel
+          git checkout laravel-split
+          git tag -f $TAG
+          git push --force https://${{ secrets.SPLIT_TOKEN }}@github.com/albertoarena/codemetry-laravel.git $TAG
