@@ -1,0 +1,34 @@
+{
+    "name": "codemetry/codemetry",
+    "description": "Git repository mood-proxy analysis library",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "codemetry/core": "@dev",
+        "codemetry/laravel": "@dev"
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.0"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/core"
+        },
+        {
+            "type": "path",
+            "url": "packages/laravel"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "pest"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
