@@ -1,0 +1,26 @@
+# OS
+.DS_Store
+
+# IDE / Editor
+.idea/
+.vscode/
+.phpstorm.meta.php
+*.swp
+*.swo
+
+# Claude Code
+.claude/
+
+# Composer
+vendor/
+composer.lock
+
+# PHP tool caches
+.php-cs-fixer.cache
+.phpunit.cache
+.phpunit.result.cache
+.phpstan/
+.psalm/
+
+# Misc
+*.log
