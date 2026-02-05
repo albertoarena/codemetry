@@ -2,6 +2,8 @@
 
 Codemetry analyzes a Git repository and produces a **metrics-based "mood proxy"** (bad/medium/good) for each day or time window. It does **not** infer emotions. Instead it estimates *quality/strain/risk* using measurable signals such as churn, scatter, follow-up fixes, and optional static-analysis totals, and reports a confidence score plus human-readable reasons.
 
+**[Documentation](https://albertoarena.github.io/codemetry)** | **[Getting Started](https://albertoarena.github.io/codemetry/getting-started/installation/)**
+
 ## Requirements
 
 - PHP 8.2+

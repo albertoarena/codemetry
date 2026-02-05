@@ -20,8 +20,6 @@ concurrency:
 
 jobs:
   build:
-    # DISABLED: Remove this line when ready to deploy publicly
-    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -48,8 +46,6 @@ jobs:
           path: website/dist
 
   deploy:
-    # DISABLED: Remove this line when ready to deploy publicly
-    if: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
