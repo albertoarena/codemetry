@@ -1,5 +1,5 @@
 {
-    "name": "codemetry/codemetry",
+    "name": "codemetry/monorepo",
     "description": "Git repository mood-proxy analysis library",
     "type": "project",
     "license": "MIT",
