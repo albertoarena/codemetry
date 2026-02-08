@@ -13,12 +13,14 @@ import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
 
 ## Installation
 
+Codemetry is a development/analysis tool—it analyzes your Git history but isn't needed in production. Install it as a dev dependency.
+
 <Steps>
 
 1. **Install via Composer**
 
    ```bash
-   composer require codemetry/laravel
+   composer require codemetry/laravel --dev
    ```
 
    The service provider is auto-discovered—no manual registration needed.
@@ -110,7 +112,7 @@ If the package isn't on Packagist yet, install directly from GitHub:
     ],
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "require": {
+    "require-dev": {
         "codemetry/laravel": "dev-master"
     }
 }

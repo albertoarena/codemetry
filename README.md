@@ -11,16 +11,18 @@ Codemetry analyzes a Git repository and produces a **metrics-based "mood proxy"*
 
 ## Installation
 
-### Core (framework-agnostic)
-
-```bash
-composer require codemetry/core
-```
+Codemetry is a development/analysis tool and should be installed as a dev dependency.
 
 ### Laravel adapter
 
 ```bash
-composer require codemetry/laravel
+composer require codemetry/laravel --dev
+```
+
+### Core (framework-agnostic)
+
+```bash
+composer require codemetry/core --dev
 ```
 
 Publish the configuration file:
