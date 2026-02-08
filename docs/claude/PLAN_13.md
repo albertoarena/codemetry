@@ -66,6 +66,14 @@ When v1.2.3 is tagged:
 3. User can now run `composer update codemetry/laravel codemetry/core`
 4. Both packages will sync to same version
 
+## Documentation Update
+
+Added upgrade instructions to:
+- `packages/laravel/README.md`
+- `website/src/content/docs/getting-started/installation.mdx`
+
+Users must run `composer update "codemetry/*"` to update both packages together.
+
 ## Status
 
-**COMPLETED** - Verified with v1.2.3 release
+**COMPLETED** - Verified with v1.2.4 release, documentation updated

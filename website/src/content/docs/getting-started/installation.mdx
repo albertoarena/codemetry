@@ -80,6 +80,22 @@ return [
   You don't need to publish the config to use Codemetry. The defaults work well for most projects.
 </Aside>
 
+## Upgrading
+
+Both `codemetry/laravel` and `codemetry/core` must be updated together to ensure compatibility. Use one of these commands:
+
+```bash
+# Update all Codemetry packages
+composer update "codemetry/*"
+
+# Or explicitly
+composer update codemetry/laravel codemetry/core
+```
+
+<Aside type="caution">
+  Running `composer update codemetry/laravel` alone may not work because both packages are versioned together and require matching versions.
+</Aside>
+
 ## Installing from GitHub (Pre-Release)
 
 If the package isn't on Packagist yet, install directly from GitHub:
