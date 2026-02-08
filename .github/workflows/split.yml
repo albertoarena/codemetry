@@ -25,10 +25,13 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           TAG=${GITHUB_REF#refs/tags/}
-          # Update composer.json to require exact version (only in working tree, not committed to monorepo)
+          # Update composer.json to require exact version
           sed -i 's/"codemetry\/core": "[^"]*"/"codemetry\/core": "'$TAG'"/' packages/laravel/composer.json
           echo "Updated packages/laravel/composer.json to require codemetry/core: $TAG"
           cat packages/laravel/composer.json | grep codemetry/core
+          # Commit locally (not pushed to monorepo, only affects split)
+          git add packages/laravel/composer.json
+          git commit -m "chore: pin codemetry/core to $TAG for release"
 
       - name: Split and push core
         run: |
