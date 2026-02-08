@@ -1,0 +1,45 @@
+{
+    "name": "codemetry/wordpress",
+    "description": "WP-CLI adapter for Codemetry Git repository analysis",
+    "type": "wp-cli-package",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alberto Arena",
+            "email": "alberto.arena@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "codemetry/core": "^1.0 || @dev"
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.0",
+        "wp-cli/wp-cli": "^2.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "Codemetry\\WordPress\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Codemetry\\WordPress\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        },
+        "commands": [
+            "Codemetry\\WordPress\\CodemetryCommand"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

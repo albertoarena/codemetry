@@ -1,11 +1,14 @@
 ---
 title: Quickstart
-description: Get Codemetry running in your Laravel project in under 2 minutes
+description: Get Codemetry running in your project in under 2 minutes
 ---
 
-import { Steps, Aside } from '@astrojs/starlight/components';
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 This guide gets you from zero to your first analysis in under 2 minutes.
+
+<Tabs>
+  <TabItem label="Laravel">
 
 <Steps>
 
@@ -31,6 +34,41 @@ This guide gets you from zero to your first analysis in under 2 minutes.
    | 2024-01-14 | medium | 55    | 0.70       | Elevated scatter           |
 
 </Steps>
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+<Steps>
+
+1. **Install the package**
+
+   ```bash
+   # Via WP-CLI package manager
+   wp package install codemetry/wordpress
+
+   # Or via Composer
+   composer require codemetry/wordpress --dev
+   ```
+
+2. **Run your first analysis**
+
+   ```bash
+   wp codemetry analyze --days=7
+   ```
+
+3. **View the results**
+
+   You'll see a table showing the mood proxy for each day:
+
+   | Date       | Mood   | Score | Confidence | Top Reasons                |
+   |------------|--------|-------|------------|----------------------------|
+   | 2024-01-15 | good   | 78    | 0.80       | Low churn; stable patterns |
+   | 2024-01-14 | medium | 55    | 0.70       | Elevated scatter           |
+
+</Steps>
+
+  </TabItem>
+</Tabs>
 
 That's it! Codemetry analyzed your Git history and produced quality metrics for the last 7 days.
 

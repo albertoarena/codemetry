@@ -6,7 +6,8 @@
     "require": {
         "php": "^8.2",
         "codemetry/core": "@dev",
-        "codemetry/laravel": "@dev"
+        "codemetry/laravel": "@dev",
+        "codemetry/wordpress": "@dev"
     },
     "require-dev": {
         "pestphp/pest": "^3.0",
@@ -20,6 +21,10 @@
         {
             "type": "path",
             "url": "packages/laravel"
+        },
+        {
+            "type": "path",
+            "url": "packages/wordpress"
         }
     ],
     "minimum-stability": "dev",

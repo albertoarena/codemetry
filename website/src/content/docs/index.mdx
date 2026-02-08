@@ -37,8 +37,8 @@ Codemetry analyzes your Git repository and produces a **metrics-based quality pr
   <Card title="Optional AI Explanations" icon="robot">
     Enable AI-powered summaries that explain your metrics in plain English. Metrics-only payload—no code is ever sent.
   </Card>
-  <Card title="Laravel-First" icon="puzzle">
-    Ships with a Laravel adapter and Artisan command. Extensible architecture for future frameworks.
+  <Card title="Framework Adapters" icon="puzzle">
+    Ships with Laravel (Artisan) and WordPress (WP-CLI) adapters. Extensible architecture for additional frameworks.
   </Card>
   <Card title="Privacy-Focused" icon="shield">
     Runs locally. No code uploads. AI is opt-in and receives only aggregated metrics—never raw code or diffs.
@@ -62,18 +62,16 @@ Use these signals to identify periods that may need review, not to evaluate indi
 
 ## Quick Example
 
+**Laravel:**
 ```bash
-# Analyze the last 7 days
 php artisan codemetry:analyze --days=7
+php artisan codemetry:analyze --days=7 --format=json --ai=1
+```
 
-# Output as JSON
-php artisan codemetry:analyze --days=7 --format=json
-
-# Filter by author
-php artisan codemetry:analyze --days=7 --author="Jane"
-
-# Enable AI explanations (requires API key)
-php artisan codemetry:analyze --days=7 --ai=1
+**WordPress (WP-CLI):**
+```bash
+wp codemetry analyze --days=7
+wp codemetry analyze --days=7 --format=json --ai=1
 ```
 
 Sample output:

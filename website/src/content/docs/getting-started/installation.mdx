@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Install Codemetry in your Laravel project
+description: Install Codemetry in your project
 ---
 
 import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
@@ -8,12 +8,16 @@ import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
 ## Requirements
 
 - PHP 8.2 or higher
-- Laravel 11.x or 12.x
 - Git installed and accessible from command line
+- **Laravel**: Laravel 11.x or 12.x
+- **WordPress**: WP-CLI 2.8+
 
 ## Installation
 
 Codemetry is a development/analysis tool—it analyzes your Git history but isn't needed in production. Install it as a dev dependency.
+
+<Tabs>
+  <TabItem label="Laravel">
 
 <Steps>
 
@@ -46,6 +50,47 @@ Codemetry is a development/analysis tool—it analyzes your Git history but isn'
    If you see a table with mood results, you're all set!
 
 </Steps>
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+<Steps>
+
+1. **Install via WP-CLI or Composer**
+
+   ```bash
+   # Option 1: WP-CLI package manager
+   wp package install codemetry/wordpress
+
+   # Option 2: Composer
+   composer require codemetry/wordpress --dev
+   ```
+
+2. **Configure via wp-cli.yml (optional)**
+
+   Create `wp-cli.yml` in your project root:
+
+   ```yaml
+   codemetry:
+     baseline_days: 56
+     ai:
+       enabled: false
+       engine: openai
+       api_key: ${CODEMETRY_AI_API_KEY}
+   ```
+
+3. **Verify installation**
+
+   ```bash
+   wp codemetry analyze --days=1
+   ```
+
+   If you see a table with mood results, you're all set!
+
+</Steps>
+
+  </TabItem>
+</Tabs>
 
 ## Configuration File
 

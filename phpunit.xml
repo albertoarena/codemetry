@@ -10,11 +10,15 @@
         <testsuite name="Laravel">
             <directory>packages/laravel/tests</directory>
         </testsuite>
+        <testsuite name="WordPress">
+            <directory>packages/wordpress/tests</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
             <directory>packages/core/src</directory>
             <directory>packages/laravel/src</directory>
+            <directory>packages/wordpress/src</directory>
         </include>
     </source>
 </phpunit>

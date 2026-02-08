@@ -21,16 +21,23 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Inject exact core version for laravel package
+      - name: Inject exact core version for adapter packages
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           TAG=${GITHUB_REF#refs/tags/}
-          # Update composer.json to require exact version
+
+          # Update laravel composer.json to require exact version
           sed -i 's/"codemetry\/core": "[^"]*"/"codemetry\/core": "'$TAG'"/' packages/laravel/composer.json
           echo "Updated packages/laravel/composer.json to require codemetry/core: $TAG"
           cat packages/laravel/composer.json | grep codemetry/core
+
+          # Update wordpress composer.json to require exact version
+          sed -i 's/"codemetry\/core": "[^"]*"/"codemetry\/core": "'$TAG'"/' packages/wordpress/composer.json
+          echo "Updated packages/wordpress/composer.json to require codemetry/core: $TAG"
+          cat packages/wordpress/composer.json | grep codemetry/core
+
           # Commit locally (not pushed to monorepo, only affects split)
-          git add packages/laravel/composer.json
+          git add packages/laravel/composer.json packages/wordpress/composer.json
           git commit -m "chore: pin codemetry/core to $TAG for release"
 
       - name: Split and push core
@@ -42,6 +49,11 @@ jobs:
         run: |
           git subtree split -P packages/laravel -b laravel-split
           git push --force https://${{ secrets.SPLIT_TOKEN }}@github.com/albertoarena/codemetry-laravel.git laravel-split:main
+
+      - name: Split and push wordpress
+        run: |
+          git subtree split -P packages/wordpress -b wordpress-split
+          git push --force https://${{ secrets.SPLIT_TOKEN }}@github.com/albertoarena/codemetry-wordpress.git wordpress-split:main
 
       - name: Push tags to split repos
         if: startsWith(github.ref, 'refs/tags/')
@@ -57,6 +69,11 @@ jobs:
           git checkout laravel-split
           git tag -f $TAG
           git push --force https://${{ secrets.SPLIT_TOKEN }}@github.com/albertoarena/codemetry-laravel.git $TAG
+
+          # Tag wordpress
+          git checkout wordpress-split
+          git tag -f $TAG
+          git push --force https://${{ secrets.SPLIT_TOKEN }}@github.com/albertoarena/codemetry-wordpress.git $TAG
 
       - name: Create releases on split repos
         if: startsWith(github.ref, 'refs/tags/')
@@ -78,3 +95,10 @@ jobs:
             --title "$TAG" \
             --generate-notes \
             || echo "Release $TAG may already exist on codemetry-laravel"
+
+          # Create release on codemetry-wordpress
+          gh release create $TAG \
+            --repo albertoarena/codemetry-wordpress \
+            --title "$TAG" \
+            --generate-notes \
+            || echo "Release $TAG may already exist on codemetry-wordpress"

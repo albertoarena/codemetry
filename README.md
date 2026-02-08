@@ -19,16 +19,24 @@ Codemetry is a development/analysis tool and should be installed as a dev depend
 composer require codemetry/laravel --dev
 ```
 
-### Core (framework-agnostic)
-
-```bash
-composer require codemetry/core --dev
-```
-
 Publish the configuration file:
 
 ```bash
 php artisan vendor:publish --tag=codemetry-config
+```
+
+### WordPress (WP-CLI)
+
+```bash
+wp package install codemetry/wordpress
+# or
+composer require codemetry/wordpress --dev
+```
+
+### Core (framework-agnostic)
+
+```bash
+composer require codemetry/core --dev
 ```
 
 ## Usage
@@ -47,6 +55,25 @@ php artisan codemetry:analyze --days=7 --author="Jane Doe" --branch=main
 
 # Enable AI-powered explanations (requires API keys in config)
 php artisan codemetry:analyze --days=7 --ai=1
+```
+
+### WordPress (WP-CLI)
+
+```bash
+# Table output (one row per day)
+wp codemetry analyze --days=7
+
+# JSON output
+wp codemetry analyze --days=7 --format=json
+
+# Filter by author or branch
+wp codemetry analyze --days=7 --author="Jane Doe" --branch=main
+
+# Enable AI-powered explanations
+wp codemetry analyze --days=7 --ai=1
+
+# View current configuration
+wp codemetry config
 ```
 
 ### Core PHP API
