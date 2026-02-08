@@ -94,6 +94,7 @@ php artisan codemetry:analyze --days=7 --ai=1
     'engine' => env('CODEMETRY_AI_ENGINE', 'openai'),
     'model' => env('CODEMETRY_AI_MODEL', null),  // null = engine default
     'api_key' => env('CODEMETRY_AI_API_KEY', null),
+    'batch_size' => env('CODEMETRY_AI_BATCH_SIZE', 10),  // Days per API call
 ],
 ```
 
@@ -103,6 +104,7 @@ php artisan codemetry:analyze --days=7 --ai=1
 | `engine` | Which AI provider to use |
 | `model` | Specific model (null = use engine's default) |
 | `api_key` | API key (falls back to engine-specific env vars) |
+| `batch_size` | Number of days to process per API call (default: 10) |
 
 ## What AI Adds
 
@@ -143,20 +145,41 @@ AI can suggest overriding the label (V1: always null). Example: changing "bad" t
   In V1, AI provides explanations only. Score modifications are reserved for future versions with more sophisticated prompts.
 </Aside>
 
+## Batch Processing
+
+Codemetry batches multiple days into a single API call for efficiency. By default, 10 days are processed per request.
+
+```php
+'ai' => [
+    'batch_size' => 10,  // Process 10 days per API call
+],
+```
+
+**Benefits:**
+- **Fewer API calls**: A 30-day analysis requires only 3 API calls instead of 30
+- **Lower latency**: Fewer round-trips to the AI provider
+- **Cost efficiency**: Batch requests are more token-efficient
+
+You can adjust `batch_size` based on your needs:
+- **Higher values** (15-20): Fewer API calls, but larger request/response sizes
+- **Lower values** (1-5): More granular error handling, but more API calls
+
+<Aside type="note">
+  If a batch fails, Codemetry marks remaining days with the `ai_unavailable` confounder and continues without AI for those days.
+</Aside>
+
 ## Cost Considerations
 
-AI calls add cost to each analysis. Typical costs per day analyzed:
+AI costs are per API call, and batching significantly reduces total calls. Approximate costs per **batch** (10 days):
 
-| Engine | Model | Approximate Cost |
-|--------|-------|-----------------|
-| OpenAI | gpt-4o-mini | ~$0.001 |
-| OpenAI | gpt-4o | ~$0.01 |
-| Anthropic | claude-3-5-haiku | ~$0.001 |
-| Anthropic | claude-3-5-sonnet | ~$0.01 |
-| DeepSeek | deepseek-chat | ~$0.0005 |
-| Google | gemini-1.5-flash | ~$0.001 |
-
-For a 30-day analysis with GPT-4o: ~$0.30
+| Engine | Model | Cost per Batch | 30-Day Analysis |
+|--------|-------|----------------|-----------------|
+| OpenAI | gpt-4o-mini | ~$0.005 | ~$0.015 |
+| OpenAI | gpt-4o | ~$0.05 | ~$0.15 |
+| Anthropic | claude-3-5-haiku | ~$0.005 | ~$0.015 |
+| Anthropic | claude-3-5-sonnet | ~$0.05 | ~$0.15 |
+| DeepSeek | deepseek-chat | ~$0.002 | ~$0.006 |
+| Google | gemini-1.5-flash | ~$0.005 | ~$0.015 |
 
 <Aside type="tip">
   Use lighter models (gpt-4o-mini, claude-3-5-haiku, gemini-flash) for routine analyses. Reserve heavier models for deep investigations.

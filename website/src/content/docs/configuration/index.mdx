@@ -61,6 +61,7 @@ See [Keywords Configuration](/codemetry/configuration/keywords/) for customizati
     'model' => env('CODEMETRY_AI_MODEL', null),  // null = use engine default
     'base_url' => env('CODEMETRY_AI_BASE_URL', null),  // Custom API endpoint
     'timeout' => env('CODEMETRY_AI_TIMEOUT', 30),  // Request timeout in seconds
+    'batch_size' => env('CODEMETRY_AI_BATCH_SIZE', 10),  // Days per API call
 ],
 ```
 
@@ -73,6 +74,7 @@ AI summarization is disabled by default. To enable:
 **Advanced options:**
 - **`base_url`**: Custom API endpoint for self-hosted models or proxies
 - **`timeout`**: Request timeout in seconds (default: 30)
+- **`batch_size`**: Number of days to process per API call (default: 10). Higher values mean fewer API calls but larger requests.
 
 See [AI Engines](/codemetry/ai-engines/) for setup instructions.
 
@@ -87,6 +89,7 @@ Codemetry respects these environment variables:
 | `CODEMETRY_AI_MODEL` | Model override | Engine default |
 | `CODEMETRY_AI_BASE_URL` | Custom API endpoint | — |
 | `CODEMETRY_AI_TIMEOUT` | Request timeout (seconds) | `30` |
+| `CODEMETRY_AI_BATCH_SIZE` | Days per API call | `10` |
 | `OPENAI_API_KEY` | OpenAI API key (fallback) | — |
 | `ANTHROPIC_API_KEY` | Anthropic API key (fallback) | — |
 | `DEEPSEEK_API_KEY` | DeepSeek API key (fallback) | — |
