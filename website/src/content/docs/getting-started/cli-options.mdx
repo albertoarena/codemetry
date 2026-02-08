@@ -13,13 +13,14 @@ php artisan codemetry:analyze [options]
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--days` | 7 | Number of days to analyze |
+| `--days` | 7 | Number of days to analyze (ignored if both `--since` and `--until` are set) |
 | `--since` | - | Start date (ISO 8601 format) |
 | `--until` | - | End date (ISO 8601 format) |
 | `--author` | - | Filter by author name (substring match) |
 | `--branch` | - | Filter by branch name |
 | `--format` | table | Output format: `table` or `json` |
 | `--ai` | 0 | Enable AI explanations: `0` or `1` |
+| `--ai-engine` | openai | AI engine: `openai`, `anthropic`, `deepseek`, `google` |
 | `--baseline-days` | 56 | Days of history for baseline |
 | `--follow-up-horizon` | 3 | Days to scan for follow-up fixes |
 | `--repo` | base_path() | Path to Git repository |
@@ -154,6 +155,25 @@ Requires `CODEMETRY_AI_API_KEY` environment variable or config setting.
 
 If AI is enabled but no API key is configured, analysis continues normally with an `ai_unavailable` confounder added to results.
 
+### `--ai-engine`
+
+Select which AI engine to use:
+
+```bash
+# Use Anthropic Claude
+php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=anthropic
+
+# Use Google Gemini
+php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=google
+
+# Use DeepSeek
+php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=deepseek
+```
+
+Available engines: `openai` (default), `anthropic`, `deepseek`, `google`.
+
+Each engine requires its corresponding API key configured via environment variable or config.
+
 ## Advanced Options
 
 ### `--baseline-days`
@@ -204,8 +224,11 @@ php artisan codemetry:analyze --days=30 --format=json
 # January 2024, filtered by author
 php artisan codemetry:analyze --since=2024-01-01 --until=2024-02-01 --author="Jane"
 
-# With AI explanations
+# With AI explanations (default OpenAI)
 php artisan codemetry:analyze --days=7 --ai=1 --format=json
+
+# With AI using Anthropic Claude
+php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=anthropic
 
 # Analyze another repository
 php artisan codemetry:analyze --days=7 --repo=/path/to/repo

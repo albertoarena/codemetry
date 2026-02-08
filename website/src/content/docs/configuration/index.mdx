@@ -57,8 +57,10 @@ See [Keywords Configuration](/codemetry/configuration/keywords/) for customizati
 'ai' => [
     'enabled' => false,  // AI is opt-in
     'engine' => env('CODEMETRY_AI_ENGINE', 'openai'),
-    'model' => env('CODEMETRY_AI_MODEL', null),  // null = use engine default
     'api_key' => env('CODEMETRY_AI_API_KEY', null),
+    'model' => env('CODEMETRY_AI_MODEL', null),  // null = use engine default
+    'base_url' => env('CODEMETRY_AI_BASE_URL', null),  // Custom API endpoint
+    'timeout' => env('CODEMETRY_AI_TIMEOUT', 30),  // Request timeout in seconds
 ],
 ```
 
@@ -67,6 +69,10 @@ AI summarization is disabled by default. To enable:
 1. Set `enabled` to `true` or use `--ai=1` flag
 2. Configure your preferred engine
 3. Provide API credentials via environment variables
+
+**Advanced options:**
+- **`base_url`**: Custom API endpoint for self-hosted models or proxies
+- **`timeout`**: Request timeout in seconds (default: 30)
 
 See [AI Engines](/codemetry/ai-engines/) for setup instructions.
 
@@ -77,8 +83,10 @@ Codemetry respects these environment variables:
 | Variable | Purpose | Default |
 |----------|---------|---------|
 | `CODEMETRY_AI_ENGINE` | AI engine to use | `openai` |
-| `CODEMETRY_AI_MODEL` | Model override | Engine default |
 | `CODEMETRY_AI_API_KEY` | API key for AI engine | — |
+| `CODEMETRY_AI_MODEL` | Model override | Engine default |
+| `CODEMETRY_AI_BASE_URL` | Custom API endpoint | — |
+| `CODEMETRY_AI_TIMEOUT` | Request timeout (seconds) | `30` |
 | `OPENAI_API_KEY` | OpenAI API key (fallback) | — |
 | `ANTHROPIC_API_KEY` | Anthropic API key (fallback) | — |
 | `DEEPSEEK_API_KEY` | DeepSeek API key (fallback) | — |

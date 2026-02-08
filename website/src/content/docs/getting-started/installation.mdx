@@ -70,6 +70,8 @@ return [
         'engine' => env('CODEMETRY_AI_ENGINE', 'openai'),
         'api_key' => env('CODEMETRY_AI_API_KEY'),
         'model' => env('CODEMETRY_AI_MODEL'),
+        'base_url' => env('CODEMETRY_AI_BASE_URL'),  // Custom API endpoint
+        'timeout' => env('CODEMETRY_AI_TIMEOUT', 30),  // Request timeout
     ],
 ];
 ```
