@@ -7,7 +7,12 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 Codemetry is designed to work out of the box with sensible defaults. Configuration is optional but allows fine-tuning for your specific workflow.
 
-## Publishing the Config File
+## Configuration Files
+
+<Tabs>
+  <TabItem label="Laravel">
+
+### Publishing the Config File
 
 ```bash
 php artisan vendor:publish --tag=codemetry-config
@@ -15,14 +20,69 @@ php artisan vendor:publish --tag=codemetry-config
 
 This creates `config/codemetry.php` in your Laravel project.
 
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+### Creating wp-cli.yml
+
+Create a `wp-cli.yml` file in your project root:
+
+```yaml
+codemetry:
+  baseline_days: 56
+  follow_up_horizon_days: 3
+  keywords:
+    fix_pattern: '/\b(fix|bug|hotfix|patch|typo|oops)\b/i'
+    revert_pattern: '/\b(revert)\b/i'
+    wip_pattern: '/\b(wip|tmp|debug|hack)\b/i'
+  ai:
+    enabled: false
+    engine: openai
+    api_key: ${CODEMETRY_AI_API_KEY}
+    model: ${CODEMETRY_AI_MODEL}
+    base_url: ${CODEMETRY_AI_BASE_URL}
+    timeout: 30
+    batch_size: 10
+```
+
+<Aside type="tip">
+  Use `${ENV_VAR}` syntax in wp-cli.yml to reference environment variables. This keeps sensitive API keys out of version control.
+</Aside>
+
+### Viewing Current Configuration
+
+```bash
+wp codemetry config
+```
+
+This displays the active configuration including defaults and any overrides from wp-cli.yml.
+
+  </TabItem>
+</Tabs>
+
 ## Configuration Options
 
 ### Analysis Window
+
+<Tabs>
+  <TabItem label="Laravel (PHP)">
 
 ```php
 'baseline_days' => 56,  // Days of history for baseline comparison
 'follow_up_horizon_days' => 3,  // Days to scan for follow-up fixes
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (YAML)">
+
+```yaml
+codemetry:
+  baseline_days: 56        # Days of history for baseline comparison
+  follow_up_horizon_days: 3  # Days to scan for follow-up fixes
+```
+
+  </TabItem>
+</Tabs>
 
 **`baseline_days`** determines how much history is used to establish "normal" patterns:
 - Default 56 days (8 weeks) provides stable baselines
@@ -36,6 +96,9 @@ This creates `config/codemetry.php` in your Laravel project.
 
 ### Keyword Patterns
 
+<Tabs>
+  <TabItem label="Laravel (PHP)">
+
 ```php
 'keywords' => [
     'fix_pattern' => '/\b(fix|bug|hotfix|patch|typo|oops)\b/i',
@@ -43,6 +106,20 @@ This creates `config/codemetry.php` in your Laravel project.
     'wip_pattern' => '/\b(wip|tmp|debug|hack)\b/i',
 ],
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (YAML)">
+
+```yaml
+codemetry:
+  keywords:
+    fix_pattern: '/\b(fix|bug|hotfix|patch|typo|oops)\b/i'
+    revert_pattern: '/\b(revert)\b/i'
+    wip_pattern: '/\b(wip|tmp|debug|hack)\b/i'
+```
+
+  </TabItem>
+</Tabs>
 
 These regex patterns identify commit types:
 - **Fix pattern**: Commits that fix issues
@@ -52,6 +129,9 @@ These regex patterns identify commit types:
 See [Keywords Configuration](/codemetry/configuration/keywords/) for customization details.
 
 ### AI Configuration
+
+<Tabs>
+  <TabItem label="Laravel (PHP)">
 
 ```php
 'ai' => [
@@ -64,6 +144,24 @@ See [Keywords Configuration](/codemetry/configuration/keywords/) for customizati
     'batch_size' => env('CODEMETRY_AI_BATCH_SIZE', 10),  // Days per API call
 ],
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (YAML)">
+
+```yaml
+codemetry:
+  ai:
+    enabled: false                          # AI is opt-in
+    engine: openai                          # openai, anthropic, deepseek, google
+    api_key: ${CODEMETRY_AI_API_KEY}        # Reference env var
+    model: ${CODEMETRY_AI_MODEL}            # null = use engine default
+    base_url: ${CODEMETRY_AI_BASE_URL}      # Custom API endpoint
+    timeout: 30                             # Request timeout in seconds
+    batch_size: 10                          # Days per API call
+```
+
+  </TabItem>
+</Tabs>
 
 AI summarization is disabled by default. To enable:
 
@@ -99,6 +197,9 @@ Codemetry respects these environment variables:
 
 Most configuration options can be overridden via CLI flags:
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 # Override baseline period
 php artisan codemetry:analyze --days=7 --baseline-days=30
@@ -113,6 +214,26 @@ php artisan codemetry:analyze --days=7 --ai=1
 php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=anthropic
 ```
 
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+# Override baseline period
+wp codemetry analyze --days=7 --baseline-days=30
+
+# Override follow-up horizon
+wp codemetry analyze --days=7 --follow-up-horizon=5
+
+# Enable AI for single run
+wp codemetry analyze --days=7 --ai=1
+
+# Specify AI engine
+wp codemetry analyze --days=7 --ai=1 --ai-engine=anthropic
+```
+
+  </TabItem>
+</Tabs>
+
 <Aside type="tip">
   CLI flags override config file settings, which override defaults. This allows project-level configuration with per-run customization.
 </Aside>
@@ -124,6 +245,9 @@ For most projects, the defaults work well. Consider adjusting:
 1. **`baseline_days`**: Increase to 90 for very stable projects, decrease to 30 for fast-moving projects
 2. **`follow_up_horizon_days`**: Increase to 5-7 if your team typically fixes issues later in the week
 3. **Keywords**: Customize if your team uses different conventions
+
+<Tabs>
+  <TabItem label="Laravel (PHP)">
 
 ```php
 // Example: Fast-moving startup project
@@ -137,3 +261,20 @@ return [
     ],
 ];
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (YAML)">
+
+```yaml
+# Example: Fast-moving startup project
+codemetry:
+  baseline_days: 30
+  follow_up_horizon_days: 5
+  keywords:
+    fix_pattern: '/\b(fix|bug|hotfix|patch|typo|oops|broken)\b/i'
+    revert_pattern: '/\b(revert|rollback)\b/i'
+    wip_pattern: '/\b(wip|tmp|debug|hack|todo)\b/i'
+```
+
+  </TabItem>
+</Tabs>

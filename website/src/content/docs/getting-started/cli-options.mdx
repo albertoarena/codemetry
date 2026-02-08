@@ -3,11 +3,30 @@ title: CLI Options
 description: Complete reference for the codemetry:analyze command options
 ---
 
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
 ## Command Syntax
+
+<Tabs>
+  <TabItem label="Laravel">
 
 ```bash
 php artisan codemetry:analyze [options]
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze [options]
+```
+
+  </TabItem>
+</Tabs>
+
+<Aside type="note">
+  All options are identical between Laravel and WordPress. Only the command prefix differs.
+</Aside>
 
 ## Available Options
 
@@ -31,17 +50,43 @@ php artisan codemetry:analyze [options]
 
 Analyze the last N days from today:
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --days=14
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=14
+```
+
+  </TabItem>
+</Tabs>
 
 ### Using `--since` and `--until`
 
 Analyze a specific date range:
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --since=2024-01-01 --until=2024-01-31
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --since=2024-01-01 --until=2024-01-31
+```
+
+  </TabItem>
+</Tabs>
 
 Dates must be in ISO 8601 format:
 - `2024-01-15`
@@ -61,9 +106,22 @@ When both `--since`/`--until` and `--days` are provided:
 
 Filter commits by author name:
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --days=7 --author="Jane"
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=7 --author="Jane"
+```
+
+  </TabItem>
+</Tabs>
 
 Uses substring matching, so "Jane" matches:
 - "Jane Doe"
@@ -74,16 +132,33 @@ Uses substring matching, so "Jane" matches:
 
 Analyze commits from a specific branch:
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --days=7 --branch=develop
 php artisan codemetry:analyze --days=7 --branch=feature/auth
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=7 --branch=develop
+wp codemetry analyze --days=7 --branch=feature/auth
+```
+
+  </TabItem>
+</Tabs>
 
 ## Output Options
 
 ### `--format`
 
 Choose output format:
+
+<Tabs>
+  <TabItem label="Laravel">
 
 ```bash
 # Human-readable table (default)
@@ -92,6 +167,20 @@ php artisan codemetry:analyze --days=7 --format=table
 # Machine-readable JSON
 php artisan codemetry:analyze --days=7 --format=json
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+# Human-readable table (default)
+wp codemetry analyze --days=7 --format=table
+
+# Machine-readable JSON
+wp codemetry analyze --days=7 --format=json
+```
+
+  </TabItem>
+</Tabs>
 
 ### JSON Output Structure
 
@@ -147,9 +236,22 @@ php artisan codemetry:analyze --days=7 --format=json
 
 Enable AI-powered explanations:
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --days=7 --ai=1
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=7 --ai=1
+```
+
+  </TabItem>
+</Tabs>
 
 Requires `CODEMETRY_AI_API_KEY` environment variable or config setting.
 
@@ -158,6 +260,9 @@ If AI is enabled but no API key is configured, analysis continues normally with 
 ### `--ai-engine`
 
 Select which AI engine to use:
+
+<Tabs>
+  <TabItem label="Laravel">
 
 ```bash
 # Use Anthropic Claude
@@ -170,6 +275,23 @@ php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=google
 php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=deepseek
 ```
 
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+# Use Anthropic Claude
+wp codemetry analyze --days=7 --ai=1 --ai-engine=anthropic
+
+# Use Google Gemini
+wp codemetry analyze --days=7 --ai=1 --ai-engine=google
+
+# Use DeepSeek
+wp codemetry analyze --days=7 --ai=1 --ai-engine=deepseek
+```
+
+  </TabItem>
+</Tabs>
+
 Available engines: `openai` (default), `anthropic`, `deepseek`, `google`.
 
 Each engine requires its corresponding API key configured via environment variable or config.
@@ -180,6 +302,9 @@ Each engine requires its corresponding API key configured via environment variab
 
 Override the baseline period:
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 # Shorter baseline (faster reaction to changes)
 php artisan codemetry:analyze --days=7 --baseline-days=14
@@ -188,22 +313,63 @@ php artisan codemetry:analyze --days=7 --baseline-days=14
 php artisan codemetry:analyze --days=7 --baseline-days=90
 ```
 
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+# Shorter baseline (faster reaction to changes)
+wp codemetry analyze --days=7 --baseline-days=14
+
+# Longer baseline (more stable comparisons)
+wp codemetry analyze --days=7 --baseline-days=90
+```
+
+  </TabItem>
+</Tabs>
+
 ### `--follow-up-horizon`
 
 Adjust the follow-up fix detection window:
+
+<Tabs>
+  <TabItem label="Laravel">
 
 ```bash
 # Extended horizon for slower release cycles
 php artisan codemetry:analyze --days=7 --follow-up-horizon=7
 ```
 
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+# Extended horizon for slower release cycles
+wp codemetry analyze --days=7 --follow-up-horizon=7
+```
+
+  </TabItem>
+</Tabs>
+
 ### `--repo`
 
 Analyze a repository at a different path:
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --days=7 --repo=/var/www/other-project
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=7 --repo=/var/www/other-project
+```
+
+  </TabItem>
+</Tabs>
 
 ## Exit Codes
 
@@ -213,6 +379,9 @@ php artisan codemetry:analyze --days=7 --repo=/var/www/other-project
 | 1 | Failure (invalid repo, Git error, etc.) |
 
 ## Examples
+
+<Tabs>
+  <TabItem label="Laravel">
 
 ```bash
 # Basic 7-day analysis
@@ -233,3 +402,32 @@ php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=anthropic
 # Analyze another repository
 php artisan codemetry:analyze --days=7 --repo=/path/to/repo
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+# Basic 7-day analysis
+wp codemetry analyze
+
+# Last 30 days as JSON
+wp codemetry analyze --days=30 --format=json
+
+# January 2024, filtered by author
+wp codemetry analyze --since=2024-01-01 --until=2024-02-01 --author="Jane"
+
+# With AI explanations (default OpenAI)
+wp codemetry analyze --days=7 --ai=1 --format=json
+
+# With AI using Anthropic Claude
+wp codemetry analyze --days=7 --ai=1 --ai-engine=anthropic
+
+# Analyze another repository
+wp codemetry analyze --days=7 --repo=/path/to/repo
+
+# View current configuration (WordPress only)
+wp codemetry config
+```
+
+  </TabItem>
+</Tabs>

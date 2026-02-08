@@ -3,21 +3,116 @@ title: Framework Adapters
 description: Integrate Codemetry with different frameworks
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-Codemetry's core is framework-agnostic. The Laravel package is an adapter that provides Artisan commands and Laravel-style configuration. You can create adapters for other frameworks or use the core directly.
+Codemetry's core is framework-agnostic. Official adapters exist for Laravel (Artisan) and WordPress (WP-CLI). You can create adapters for other frameworks or use the core directly.
 
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────┐
-│            Your Application                  │
-├─────────────────────────────────────────────┤
-│  Laravel Adapter  │  Symfony Adapter  │ ... │
-├─────────────────────────────────────────────┤
-│              Codemetry Core                  │
-│  (Analyzer, Providers, Scorer, etc.)        │
-└─────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│                     Your Application                           │
+├───────────────────────────────────────────────────────────────┤
+│  Laravel Adapter  │  WordPress Adapter  │  Symfony Bundle  │...│
+├───────────────────────────────────────────────────────────────┤
+│                      Codemetry Core                            │
+│            (Analyzer, Providers, Scorer, etc.)                 │
+└───────────────────────────────────────────────────────────────┘
+```
+
+## Official Adapters
+
+### Laravel Adapter
+
+The Laravel adapter (`codemetry/laravel`) provides:
+- Artisan command: `php artisan codemetry:analyze`
+- Laravel-style configuration via `config/codemetry.php`
+- Environment variable support via `.env`
+- Auto-discovery via Laravel's package system
+
+### WordPress Adapter
+
+The WordPress adapter (`codemetry/wordpress`) provides:
+- WP-CLI command: `wp codemetry analyze`
+- Configuration via `wp-cli.yml`
+- Additional command: `wp codemetry config` (view active configuration)
+
+**Package structure:**
+
+```
+packages/wordpress/
+├── composer.json
+├── src/
+│   └── Command/
+│       └── CodemetryCommand.php
+└── wp-cli.yml.example
+```
+
+**How WP-CLI auto-discovery works:**
+
+WP-CLI automatically discovers commands from Composer packages that include a `wp-cli.yml` file at the package root. The WordPress adapter registers itself like this:
+
+```php
+<?php
+// src/Command/CodemetryCommand.php
+namespace Codemetry\WordPress\Command;
+
+use Codemetry\Core\Analyzer;
+use Codemetry\Core\Domain\AnalysisRequest;
+use WP_CLI;
+
+class CodemetryCommand
+{
+    /**
+     * Analyze Git repository for code quality metrics.
+     *
+     * ## OPTIONS
+     *
+     * [--days=<days>]
+     * : Number of days to analyze.
+     * ---
+     * default: 7
+     * ---
+     *
+     * [--format=<format>]
+     * : Output format (table or json).
+     * ---
+     * default: table
+     * options:
+     *   - table
+     *   - json
+     * ---
+     *
+     * ## EXAMPLES
+     *
+     *     wp codemetry analyze --days=7
+     *     wp codemetry analyze --format=json --ai=1
+     *
+     * @when before_wp_load
+     */
+    public function analyze($args, $assocArgs): void
+    {
+        $config = $this->loadConfig();
+        $analyzer = new Analyzer($config);
+
+        $request = $this->buildRequest($assocArgs);
+        $result = $analyzer->analyze(getcwd(), $request);
+
+        $this->renderOutput($result, $assocArgs['format'] ?? 'table');
+    }
+}
+```
+
+The package's `composer.json` includes the WP-CLI autoload hook:
+
+```json
+{
+    "extra": {
+        "commands": [
+            "Codemetry\\WordPress\\Command\\CodemetryCommand"
+        ]
+    }
+}
 ```
 
 ## Using Core Directly

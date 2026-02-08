@@ -3,15 +3,26 @@ title: Basic Usage
 description: Learn how to run Codemetry analysis and interpret results
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
 ## Running an Analysis
 
-The primary command is `codemetry:analyze`:
+<Tabs>
+  <TabItem label="Laravel">
 
 ```bash
 php artisan codemetry:analyze --days=7
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=7
+```
+
+  </TabItem>
+</Tabs>
 
 This analyzes the last 7 days and outputs a table:
 
@@ -59,17 +70,43 @@ Human-readable explanations of the main factors affecting the score. Examples:
 
 ### Table (default)
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --days=7
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=7
+```
+
+  </TabItem>
+</Tabs>
 
 Best for quick visual inspection in the terminal.
 
 ### JSON
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --days=7 --format=json
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=7 --format=json
+```
+
+  </TabItem>
+</Tabs>
 
 Returns structured JSON with full details:
 
@@ -105,6 +142,9 @@ Returns structured JSON with full details:
 
 ### By Date Range
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 # Specific date range
 php artisan codemetry:analyze --since=2024-01-01 --until=2024-01-15
@@ -113,13 +153,40 @@ php artisan codemetry:analyze --since=2024-01-01 --until=2024-01-15
 php artisan codemetry:analyze --days=30
 ```
 
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+# Specific date range
+wp codemetry analyze --since=2024-01-01 --until=2024-01-15
+
+# Last N days
+wp codemetry analyze --days=30
+```
+
+  </TabItem>
+</Tabs>
+
 ### By Author
 
 Analyze commits from a specific author:
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --days=7 --author="Jane Doe"
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=7 --author="Jane Doe"
+```
+
+  </TabItem>
+</Tabs>
 
 The author filter uses substring matching on the Git author name.
 
@@ -127,33 +194,85 @@ The author filter uses substring matching on the Git author name.
 
 Analyze a specific branch:
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --days=7 --branch=feature/new-auth
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=7 --branch=feature/new-auth
+```
+
+  </TabItem>
+</Tabs>
 
 ## Customizing Analysis
 
 ### Override Baseline Days
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --days=7 --baseline-days=30
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=7 --baseline-days=30
+```
+
+  </TabItem>
+</Tabs>
 
 A shorter baseline reacts faster to recent changes but may be less stable.
 
 ### Override Follow-up Horizon
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --days=7 --follow-up-horizon=5
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=7 --follow-up-horizon=5
+```
+
+  </TabItem>
+</Tabs>
 
 Extend the window for detecting follow-up fix commits.
 
 ### Analyze a Different Repository
 
+<Tabs>
+  <TabItem label="Laravel">
+
 ```bash
 php artisan codemetry:analyze --days=7 --repo=/path/to/other/repo
 ```
+
+  </TabItem>
+  <TabItem label="WordPress (WP-CLI)">
+
+```bash
+wp codemetry analyze --days=7 --repo=/path/to/other/repo
+```
+
+  </TabItem>
+</Tabs>
 
 <Aside type="caution">
   The target path must be a valid Git repository with commit history.
