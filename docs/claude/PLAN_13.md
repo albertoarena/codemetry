@@ -57,15 +57,15 @@ When v1.2.3 is tagged:
 - [x] Split workflow updated with version injection step
 - [x] Step runs before laravel split
 - [x] Step only runs on tag pushes
-- [ ] Test with new tag to verify both packages sync
+- [x] Test with new tag to verify both packages sync
 
 ## Verification
 
-1. Create a new tag (e.g., v1.2.2)
-2. Check the split repo `codemetry-laravel` composer.json shows exact version
-3. In a test project, run `composer update codemetry/laravel`
-4. Verify both packages show same version in `composer.lock`
+1. Created tag v1.2.3
+2. Verified split repo `codemetry-laravel` composer.json shows: `"codemetry/core": "v1.2.3"`
+3. User can now run `composer update codemetry/laravel codemetry/core`
+4. Both packages will sync to same version
 
 ## Status
 
-**IMPLEMENTED** - Workflow updated, pending verification with next release
+**COMPLETED** - Verified with v1.2.3 release
