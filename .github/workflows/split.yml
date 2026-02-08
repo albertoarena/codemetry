@@ -21,6 +21,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Inject exact core version for laravel package
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          # Update composer.json to require exact version (only in working tree, not committed to monorepo)
+          sed -i 's/"codemetry\/core": "[^"]*"/"codemetry\/core": "'$TAG'"/' packages/laravel/composer.json
+          echo "Updated packages/laravel/composer.json to require codemetry/core: $TAG"
+          cat packages/laravel/composer.json | grep codemetry/core
+
       - name: Split and push core
         run: |
           git subtree split -P packages/core -b core-split
