@@ -13,9 +13,9 @@ export default defineConfig({
         dark: './src/assets/logo-dark.svg',
         replacesTitle: false,
       },
-      social: {
-        github: 'https://github.com/albertoarena/codemetry',
-      },
+      social: [
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/albertoarena/codemetry' },
+      ],
       editLink: {
         baseUrl: 'https://github.com/albertoarena/codemetry/edit/master/website/',
       },
