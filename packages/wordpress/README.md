@@ -192,6 +192,12 @@ Show current configuration (merged from all sources).
 - All analysis runs locally via Git commands
 - No data sent to external services unless AI is explicitly enabled
 
+## 📬 Stay updated
+
+Occasional emails on WordPress tooling and AI-assisted development: new releases, packages, and write-ups. No spam, unsubscribe anytime.
+
+**[Subscribe to the newsletter →](https://albertoarena.it/subscribe/?utm_source=codemetry&utm_medium=readme&utm_campaign=newsletter&utm_content=codemetry-wordpress)**
+
 ## License
 
 MIT
