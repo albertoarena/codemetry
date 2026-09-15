@@ -1,0 +1,50 @@
+name: Website
+
+# Deliberately NOT filtered on `paths: website/**`. This check is a required
+# status check under a strict ruleset, and a path-filtered required check never
+# reports on PRs that miss the filter, leaving them blocked on "Expected" forever.
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  website-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        working-directory: website
+        run: npm ci
+
+      - name: Build website
+        working-directory: website
+        run: npm run build
+
+      # Astro 5+ Content Layer fails open: drop the docs collection loader and the
+      # build still exits 0, having emitted only 404.html. Exit code alone is not
+      # enough of a signal, so assert the output actually contains the site.
+      - name: Verify build output
+        working-directory: website
+        run: |
+          if [ ! -f dist/index.html ]; then
+            echo "::error::dist/index.html missing — the docs collection produced no home page"
+            exit 1
+          fi
+
+          pages=$(find dist -name '*.html' | wc -l | tr -d ' ')
+          echo "Built $pages HTML pages"
+
+          if [ "$pages" -lt 20 ]; then
+            echo "::error::Only $pages HTML pages built (expected ~23) — the docs content collection is likely not loading"
+            exit 1
+          fi
