@@ -9,6 +9,8 @@ on:
 jobs:
   split:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -102,3 +104,20 @@ jobs:
             --title "$TAG" \
             --generate-notes \
             || echo "Release $TAG may already exist on codemetry-wordpress"
+
+      - name: Create release on monorepo
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+
+          if gh release view "$TAG" --repo ${{ github.repository }} >/dev/null 2>&1; then
+            echo "Release $TAG already exists on ${{ github.repository }}, skipping"
+          else
+            gh release create "$TAG" \
+              --repo ${{ github.repository }} \
+              --title "$TAG" \
+              --verify-tag \
+              --generate-notes
+          fi
