@@ -35,7 +35,7 @@ Google's Gemini models offer strong reasoning capabilities with good integration
    'ai' => [
        'enabled' => true,
        'engine' => 'google',
-       'model' => null,  // Uses gemini-1.5-flash by default
+       'model' => null,  // Uses gemini-3.8-flash by default
    ],
    ```
 
@@ -51,30 +51,27 @@ Google's Gemini models offer strong reasoning capabilities with good integration
 
 | Model | Default | Cost | Quality | Speed |
 |-------|---------|------|---------|-------|
-| `gemini-1.5-flash` | ✓ | Low | Good | Very Fast |
-| `gemini-1.5-pro` | | Medium | Excellent | Medium |
-| `gemini-2.0-flash-exp` | | Low | Better | Very Fast |
+| `gemini-3.8-flash` | ✓ | Low | Good | Very Fast |
+| `gemini-3.5-flash-lite` |  | Very Low | Good | Very Fast |
+| `gemini-4-argon` |  | High | Best | Medium |
+
+Google retires models regularly. If a model on this page stops working, check the provider's model list and set a current one.
 
 ### Choosing a Model
 
-**For routine analysis:** Use `gemini-1.5-flash` (default)
-- Very fast response times
-- Cost-effective
-- Good quality for metric explanations
+**For routine analysis:** Use `gemini-3.8-flash` (default)
+- Google's current Flash model: fast and inexpensive
 
-**For detailed investigation:** Use `gemini-1.5-pro`
-- Better reasoning capabilities
-- More thorough explanations
-- Worth the extra cost for deep dives
+**Alternative:** Use `gemini-3.5-flash-lite`
+- The lowest-cost option for frequent runs
 
-**For experimental features:** Use `gemini-2.0-flash-exp`
-- Latest capabilities
-- May have improved quality
-- Subject to change as it's experimental
+**For critical analyses:** Use `gemini-4-argon`
+- Google's Pro-tier model for deeper investigations
+
+There is no `--ai-model` flag. To override the model for a single run, set `CODEMETRY_AI_MODEL`:
 
 ```bash
-# Override model for single run
-php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=google --ai-model=gemini-1.5-pro
+CODEMETRY_AI_MODEL=gemini-3.5-flash-lite php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=google
 ```
 
 Or in configuration:
@@ -82,7 +79,7 @@ Or in configuration:
 ```php
 'ai' => [
     'engine' => 'google',
-    'model' => 'gemini-1.5-pro',
+    'model' => 'gemini-3.5-flash-lite',
 ],
 ```
 
@@ -103,19 +100,11 @@ export GOOGLE_AI_API_KEY=AIza...
 
 ## Cost Management
 
-Google AI Studio offers generous free tiers and competitive pricing:
+Google charges per token. Codemetry sends minimal data:
+- ~500-1000 input tokens per day analyzed
+- ~200-500 output tokens per summary
 
-**Free Tier (AI Studio):**
-- 15 requests per minute for Flash models
-- 2 requests per minute for Pro models
-- No cost for moderate usage
-
-**Estimated costs per 30-day analysis (beyond free tier):**
-
-| Model | Input | Output | Total |
-|-------|-------|--------|-------|
-| gemini-1.5-flash | ~$0.002 | ~$0.003 | ~$0.005 |
-| gemini-1.5-pro | ~$0.01 | ~$0.03 | ~$0.04 |
+Prices change often, so check [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing) for current per-token rates.
 
 <Aside type="tip">
   The free tier is often sufficient for individual developers or small teams. Check your usage in Google AI Studio to monitor consumption.
@@ -179,11 +168,11 @@ This provides:
 
 ### Slow Responses with Pro Model
 
-**Symptom:** `gemini-1.5-pro` takes longer than expected.
+**Symptom:** `gemini-4-argon` takes longer than expected.
 
 **Solution:**
 - This is normal; Pro models prioritize quality over speed
-- Use `gemini-1.5-flash` for faster responses
+- Use `gemini-3.8-flash` (the default) for faster responses
 - Consider Pro only for detailed investigations
 
 <Aside type="caution">

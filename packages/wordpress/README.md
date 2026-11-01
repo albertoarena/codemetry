@@ -108,7 +108,7 @@ codemetry:
 ```bash
 export CODEMETRY_AI_ENGINE=openai
 export CODEMETRY_AI_API_KEY=sk-...
-export CODEMETRY_AI_MODEL=gpt-4o-mini
+export CODEMETRY_AI_MODEL=gpt-6-luna
 export CODEMETRY_AI_TIMEOUT=30
 export CODEMETRY_AI_BATCH_SIZE=10
 ```
