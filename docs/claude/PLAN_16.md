@@ -54,7 +54,7 @@ php83 composer update && php83 vendor/bin/pest --display-deprecations
 - [x] CI matrix covers PHP 8.3/8.4/8.5 × Laravel 12/13
 - [x] Tests pass locally on PHP 8.3, 8.4, 8.5 and on Laravel 12 and 13, with deprecations displayed
 - [x] No "PHP 8.2" references left in docs (except historical plan files)
-- [ ] CI green on the PR
+- [x] CI green on the PR (6 test jobs + website-build; each job confirmed to install its pinned Laravel major)
 - [ ] Ruleset updated (owner)
 - [ ] Plan file updated with final Status / Review Notes
 
