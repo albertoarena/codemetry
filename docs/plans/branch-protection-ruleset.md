@@ -19,7 +19,7 @@ A ruleset already exists (ID: `12505957`) with:
 
 **Missing:** pull request requirement and required status checks.
 
-The CI workflow (`.github/workflows/tests.yml`) already runs Pest tests on PHP 8.2, 8.3, and 8.4 for pushes to `master` and all PRs. The matrix job names produced are: `test (8.2)`, `test (8.3)`, `test (8.4)`.
+The CI workflow (`.github/workflows/tests.yml`) runs Pest tests on PHP 8.3, 8.4 and 8.5, each against Laravel 12 and 13, for pushes to `master` and all PRs. The matrix job names produced are `test (<php>, <laravel>)`, e.g. `test (8.3, 12)` (6 jobs). `website.yml` adds `website-build`.
 
 ## Steps
 
@@ -72,9 +72,13 @@ gh api repos/albertoarena/codemetry/rulesets/12505957 \
       "parameters": {
         "strict_required_status_checks_policy": true,
         "required_status_checks": [
-          { "context": "test (8.2)" },
-          { "context": "test (8.3)" },
-          { "context": "test (8.4)" }
+          { "context": "test (8.3, 12)" },
+          { "context": "test (8.3, 13)" },
+          { "context": "test (8.4, 12)" },
+          { "context": "test (8.4, 13)" },
+          { "context": "test (8.5, 12)" },
+          { "context": "test (8.5, 13)" },
+          { "context": "website-build" }
         ]
       }
     }
@@ -90,9 +94,9 @@ EOF
 | `deletion` | Prevents deleting the `master` branch (already active) |
 | `non_fast_forward` | Prevents force-pushes to `master` (already active) |
 | `pull_request` | Requires a PR with **1 approval** before merging; dismisses stale reviews on new pushes. Admin bypasses this, so owner PRs don't need approval |
-| `required_status_checks` | All 3 CI matrix jobs must pass; `strict_required_status_checks_policy: true` means the PR branch must be up to date with `master` before merging |
+| `required_status_checks` | All 6 CI matrix jobs and `website-build` must pass; `strict_required_status_checks_policy: true` means the PR branch must be up to date with `master` before merging |
 
-**Status check context names:** These match the job name (`test`) combined with the matrix value — GitHub renders them as `test (8.2)`, `test (8.3)`, `test (8.4)`.
+**Status check context names:** These match the job name (`test`) combined with the matrix values — GitHub renders them as `test (8.3, 12)` … `test (8.5, 13)`.
 
 ---
 

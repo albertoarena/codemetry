@@ -6,7 +6,7 @@ Codemetry analyzes a Git repository and produces a **metrics-based "mood proxy"*
 
 ## Requirements
 
-- PHP 8.2+
+- PHP 8.3+
 - Git
 
 ## Installation

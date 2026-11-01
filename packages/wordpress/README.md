@@ -4,7 +4,7 @@ WP-CLI adapter for [Codemetry](https://github.com/albertoarena/codemetry) - Git 
 
 ## Requirements
 
-- PHP 8.2+
+- PHP 8.3+
 - WP-CLI 2.8+
 - Git
 

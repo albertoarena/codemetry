@@ -10,7 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-version: ['8.2', '8.3', '8.4']
+        php-version: ['8.3', '8.4', '8.5']
+        laravel: ['12', '13']
 
     steps:
       - name: Checkout
@@ -31,11 +32,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-composer-php${{ matrix.php-version }}-laravel${{ matrix.laravel }}-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-composer-
 
+      - name: Pin Laravel ${{ matrix.laravel }}
+        run: composer require --dev --no-update "laravel/framework:^${{ matrix.laravel }}.0"
+
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer update --prefer-dist --no-progress
 
       - name: Run tests
         run: ./vendor/bin/pest
