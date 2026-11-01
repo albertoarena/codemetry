@@ -143,31 +143,15 @@ composer update codemetry/laravel codemetry/core
   Running `composer update codemetry/laravel` alone may not work because both packages are versioned together and require matching versions.
 </Aside>
 
-## Installing from GitHub (Pre-Release)
+## Installing the Development Version
 
-If the package isn't on Packagist yet, install directly from GitHub:
-
-```json
-{
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/albertoarena/codemetry"
-        }
-    ],
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "require-dev": {
-        "codemetry/laravel": "dev-master"
-    }
-}
-```
-
-Then run:
+All three packages (`codemetry/core`, `codemetry/laravel` and `codemetry/wordpress`) are on Packagist. To try changes that haven't been released yet, require the `dev-main` branch:
 
 ```bash
-composer update
+composer require codemetry/laravel:dev-main --dev
 ```
+
+Switch back to a tagged release (for example `^1.5`) for anything you depend on.
 
 ## Troubleshooting
 

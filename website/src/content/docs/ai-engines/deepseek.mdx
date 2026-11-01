@@ -33,7 +33,7 @@ DeepSeek offers highly cost-effective AI models with strong reasoning capabiliti
    'ai' => [
        'enabled' => true,
        'engine' => 'deepseek',
-       'model' => null,  // Uses deepseek-chat by default
+       'model' => null,  // Uses deepseek-flash by default
    ],
    ```
 
@@ -49,24 +49,23 @@ DeepSeek offers highly cost-effective AI models with strong reasoning capabiliti
 
 | Model | Default | Cost | Quality | Speed |
 |-------|---------|------|---------|-------|
-| `deepseek-chat` | ✓ | Very Low | Good | Fast |
-| `deepseek-reasoner` | | Low | Better | Medium |
+| `deepseek-flash` | ✓ | Very Low | Good | Fast |
+| `deepseek-v4-pro` |  | Low | Better | Medium |
+
+DeepSeek retires models regularly. If a model on this page stops working, check the provider's model list and set a current one.
 
 ### Choosing a Model
 
-**For routine analysis:** Use `deepseek-chat` (default)
-- Extremely cost-effective
-- Good quality for metric explanations
-- Fast response times
+**For routine analysis:** Use `deepseek-flash` (default)
+- Extremely cost-effective and fast
 
-**For deeper analysis:** Use `deepseek-reasoner`
-- Enhanced reasoning capabilities
-- Better at complex pattern analysis
-- Still very affordable
+**Alternative:** Use `deepseek-v4-pro`
+- DeepSeek's advanced reasoning model, still inexpensive
+
+There is no `--ai-model` flag. To override the model for a single run, set `CODEMETRY_AI_MODEL`:
 
 ```bash
-# Override model for single run
-php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=deepseek --ai-model=deepseek-reasoner
+CODEMETRY_AI_MODEL=deepseek-v4-pro php artisan codemetry:analyze --days=7 --ai=1 --ai-engine=deepseek
 ```
 
 Or in configuration:
@@ -74,7 +73,7 @@ Or in configuration:
 ```php
 'ai' => [
     'engine' => 'deepseek',
-    'model' => 'deepseek-reasoner',
+    'model' => 'deepseek-v4-pro',
 ],
 ```
 
@@ -95,16 +94,11 @@ export DEEPSEEK_API_KEY=sk-...
 
 ## Cost Management
 
-DeepSeek offers some of the lowest API pricing available:
+DeepSeek charges per token. Codemetry sends minimal data:
+- ~500-1000 input tokens per day analyzed
+- ~200-500 output tokens per summary
 
-**Estimated costs per 30-day analysis:**
-
-| Model | Input | Output | Total |
-|-------|-------|--------|-------|
-| deepseek-chat | ~$0.001 | ~$0.002 | ~$0.003 |
-| deepseek-reasoner | ~$0.002 | ~$0.004 | ~$0.006 |
-
-This makes DeepSeek approximately 5-10x cheaper than comparable models from other providers.
+Prices change often, so check [DeepSeek pricing](https://api-docs.deepseek.com/quick_start/pricing) for current per-token rates.
 
 <Aside type="tip">
   DeepSeek is an excellent choice for teams running frequent analyses or analyzing many repositories. The cost savings add up significantly over time.
@@ -158,7 +152,7 @@ For Codemetry's use case (explaining structured metrics), DeepSeek performs very
 **Symptom:** AI summaries seem less detailed or insightful.
 
 **Solution:**
-- Try `deepseek-reasoner` for better quality
+- Try `deepseek-v4-pro` for better quality
 - Consider using a different engine for critical analyses
 - DeepSeek works well for routine use; use premium models for investigations
 

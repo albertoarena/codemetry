@@ -48,16 +48,16 @@ If AI is enabled but unavailable:
 
 <CardGrid>
   <Card title="OpenAI" icon="rocket">
-    GPT-4o, GPT-4, GPT-3.5-turbo. Best balance of quality and cost.
+    GPT-6 Luna (default), Sol, Astra. Best balance of quality and cost.
   </Card>
   <Card title="Anthropic" icon="star">
-    Claude 3.5 Sonnet, Claude 3 Opus/Haiku. Excellent reasoning quality.
+    Claude Sonnet 5.5 (default), Haiku 5.5, Opus 5.5. Excellent reasoning quality.
   </Card>
   <Card title="DeepSeek" icon="lightning">
-    DeepSeek Chat. Cost-effective alternative.
+    DeepSeek Flash (default), V4 Pro. Cost-effective alternative.
   </Card>
   <Card title="Google" icon="sun">
-    Gemini Pro, Gemini Flash. Google Cloud integration.
+    Gemini 3.8 Flash (default), 3.5 Flash-Lite, 4 Argon. Google Cloud integration.
   </Card>
 </CardGrid>
 
@@ -170,19 +170,17 @@ You can adjust `batch_size` based on your needs:
 
 ## Cost Considerations
 
-AI costs are per API call, and batching significantly reduces total calls. Approximate costs per **batch** (10 days):
+AI costs are per API call, and batching significantly reduces total calls. Codemetry's requests are small: roughly 500-1000 input tokens per day analyzed and 200-500 output tokens per summary.
 
-| Engine | Model | Cost per Batch | 30-Day Analysis |
-|--------|-------|----------------|-----------------|
-| OpenAI | gpt-4o-mini | ~$0.005 | ~$0.015 |
-| OpenAI | gpt-4o | ~$0.05 | ~$0.15 |
-| Anthropic | claude-3-5-haiku | ~$0.005 | ~$0.015 |
-| Anthropic | claude-3-5-sonnet | ~$0.05 | ~$0.15 |
-| DeepSeek | deepseek-chat | ~$0.002 | ~$0.006 |
-| Google | gemini-1.5-flash | ~$0.005 | ~$0.015 |
+| Engine | Default model | Cheaper option | Pricing |
+|--------|---------------|----------------|---------|
+| OpenAI | `gpt-6-luna` | — | [openai.com/api/pricing](https://openai.com/api/pricing/) |
+| Anthropic | `claude-sonnet-5-5` | `claude-haiku-5-5` | [Anthropic pricing](https://platform.claude.com/docs/en/about-claude/pricing) |
+| DeepSeek | `deepseek-flash` | — | [DeepSeek pricing](https://api-docs.deepseek.com/quick_start/pricing) |
+| Google | `gemini-3.8-flash` | `gemini-3.5-flash-lite` | [Gemini API pricing](https://ai.google.dev/gemini-api/docs/pricing) |
 
 <Aside type="tip">
-  Use lighter models (gpt-4o-mini, claude-3-5-haiku, gemini-flash) for routine analyses. Reserve heavier models for deep investigations.
+  Use lighter models (`gpt-6-luna`, `claude-haiku-5-5`, `gemini-3.5-flash-lite`, `deepseek-flash`) for routine analyses. Reserve heavier models for deep investigations.
 </Aside>
 
 ## Without AI
