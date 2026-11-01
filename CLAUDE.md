@@ -43,7 +43,7 @@ Git Repo → GitRepoReader → RepoSnapshot
 
 ## Tech Stack
 
-- PHP 8.2+
+- PHP 8.3+
 - Symfony Process (git execution)
 - DateTimeImmutable (no Carbon in core)
 - Pest (testing)
