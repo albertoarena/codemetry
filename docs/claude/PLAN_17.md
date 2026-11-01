@@ -59,15 +59,16 @@ OPENAI_API_KEY=... php artisan codemetry:analyze --days=3 --ai=1 --format=json
 - [x] Tests cover each engine's default model
 - [x] No retired model names or `--ai-model` left in docs
 - [x] Tests pass; website builds
-- [ ] Owner confirms a live OpenAI call works with the new defaults
-- [ ] CI green on the PR
-- [ ] Plan file updated with final Status / Review Notes
+- [x] Owner confirms a live OpenAI call works with the new defaults
+- [x] CI green on the PR (6 test jobs + website-build)
+- [x] Plan file updated with final Status / Review Notes
 
 ## Results
 
 - 190 tests pass (185 existing + 5 new) on PHP 8.4 and 8.5
 - Website builds locally: 23 pages
 - Docs sweep: no retired model names, `--ai-model`, `dev-master` or hardcoded cost estimates left in `website/` or the READMEs
+- Owner live check (2026-11-01), OpenAI `gpt-6-luna`: single summary OK (valid JSON with explanation bullets), 2-day batch OK. No truncation at the new `max_completion_tokens` limits
 
 ## Review Notes
 
@@ -77,8 +78,8 @@ OPENAI_API_KEY=... php artisan codemetry:analyze --days=3 --ai=1 --format=json
 - Docs: current model tables, `CODEMETRY_AI_MODEL` replaces the documented-but-non-existent `--ai-model` flag, cost estimates replaced by links to provider pricing, roadmap lists WordPress, the broken "Installing from GitHub" section (it pointed Composer at the monorepo root package) replaced by `dev-main` instructions
 
 **Risks / assumptions**
-- The OpenAI parameter change and new defaults have not been tested against live APIs (no keys available to Claude); the owner's live check covers OpenAI only
-- `max_completion_tokens` counts reasoning tokens too. If `gpt-6-luna` reasons before answering, 1000 (single) / 4000 (batch) may truncate output; the live check will show this
+- Only OpenAI was checked against the live API (by the owner); the Anthropic, Google and DeepSeek defaults are verified against provider docs only
+- `max_completion_tokens` counts reasoning tokens too; the live check showed 1000 (single) / 4000 (batch) is enough for `gpt-6-luna`, but a heavier-reasoning model set via `CODEMETRY_AI_MODEL` could still hit the limit
 - DeepSeek's `deepseek-chat` retirement date comes from third-party reports; DeepSeek's own docs simply no longer list it
 - Provider model IDs were taken from each provider's docs on 2026-11-01 and will go stale again; each engine page now says so
 
@@ -86,4 +87,6 @@ OPENAI_API_KEY=... php artisan codemetry:analyze --days=3 --ai=1 --format=json
 - Release v1.5.1 after the live check (core changed)
 - Optional: add a real `--ai-model` CLI option to the Laravel and WordPress commands
 
-## Status: Implemented — awaiting owner's live OpenAI check
+## Status: COMPLETE
+
+Live OpenAI check passed and CI green on PR #47 (2026-11-01).
