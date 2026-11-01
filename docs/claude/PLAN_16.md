@@ -55,8 +55,8 @@ php83 composer update && php83 vendor/bin/pest --display-deprecations
 - [x] Tests pass locally on PHP 8.3, 8.4, 8.5 and on Laravel 12 and 13, with deprecations displayed
 - [x] No "PHP 8.2" references left in docs (except historical plan files)
 - [x] CI green on the PR (6 test jobs + website-build; each job confirmed to install its pinned Laravel major)
-- [ ] Ruleset updated (owner)
-- [ ] Plan file updated with final Status / Review Notes
+- [x] Ruleset updated (owner, 2026-11-01): required checks are the 6 `test (<php>, <laravel>)` jobs + `website-build`
+- [x] Plan file updated with final Status / Review Notes
 
 ## Test Results (local)
 
@@ -86,8 +86,9 @@ PHP 8.4 + Laravel 12 is covered by CI only.
 - CI now runs `composer update` after pinning the Laravel major (the lockfile was never committed, so `install` already resolved fresh)
 
 **Follow-ups**
-- Owner must update the branch ruleset's required checks (see above)
 - Release v1.5.0 after merge (touches all three packages)
 - Optional: Pest 3 → 4 (now possible on PHP 8.3)
 
-## Status: Implemented — awaiting CI, ruleset update and approval
+## Status: COMPLETE
+
+Merged in PR #45 (`42798e1`) on 2026-11-01; CI green on master.
